@@ -12,14 +12,18 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class HydraServersRequester {
+//This class has default scope because is used only by hydra client.
+class HydraServersRequester {
 
 	private HttpClient httpClient = HttpClientBuilder.create().build();
 	
 	private ObjectMapper mapper = new ObjectMapper();
 
+	private JavaType type = mapper.getTypeFactory().constructCollectionType(LinkedHashSet.class, String.class);
+	
 	public Set<String> getCandidateServers(String hydraServerUrl, String appId) {
 		try {
 			return requestServers(hydraServerUrl, appId);
@@ -52,6 +56,6 @@ public class HydraServersRequester {
 	}
 	
 	private Set<String> parseJsonResponse(String response) throws IOException{
-		return mapper.readValue(response,LinkedHashSet.class);
+		return mapper.readValue(response,type);
 	}
 }

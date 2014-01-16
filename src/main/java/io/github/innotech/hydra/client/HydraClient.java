@@ -9,7 +9,8 @@ public class HydraClient {
 	
 	private LinkedHashSet<String> hydraServers;
 	
-	public HydraClient(LinkedHashSet<String> seedHydraServers) {
+	//Only the factory can create hydra clients.
+	HydraClient(LinkedHashSet<String> seedHydraServers) {
 		this.hydraServers = seedHydraServers;
 	}
 
