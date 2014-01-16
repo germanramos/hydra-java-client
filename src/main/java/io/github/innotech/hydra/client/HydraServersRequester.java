@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.LinkedHashSet;
-import java.util.Set;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -24,7 +23,7 @@ class HydraServersRequester {
 
 	private JavaType type = mapper.getTypeFactory().constructCollectionType(LinkedHashSet.class, String.class);
 	
-	public Set<String> getCandidateServers(String hydraServerUrl, String appId) {
+	public LinkedHashSet<String> getCandidateServers(String hydraServerUrl, String appId) {
 		try {
 			return requestServers(hydraServerUrl, appId);
 		} catch (ClientProtocolException e) {
@@ -34,7 +33,7 @@ class HydraServersRequester {
 		}
 	}
 
-	private Set<String> requestServers(String hydraServerUrl, String appId) throws IOException, ClientProtocolException {
+	private LinkedHashSet<String> requestServers(String hydraServerUrl, String appId) throws IOException, ClientProtocolException {
 		HttpGet httpGet = new HttpGet(hydraServerUrl + "/" + appId);
 		HttpResponse response = httpClient.execute(httpGet);
 
@@ -55,7 +54,7 @@ class HydraServersRequester {
 		return builder.toString();
 	}
 	
-	private Set<String> parseJsonResponse(String response) throws IOException{
+	private LinkedHashSet<String> parseJsonResponse(String response) throws IOException{
 		return mapper.readValue(response,type);
 	}
 }

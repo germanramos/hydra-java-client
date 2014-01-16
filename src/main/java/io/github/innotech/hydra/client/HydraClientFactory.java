@@ -31,9 +31,15 @@ public class HydraClientFactory {
 		}
 		
 		hydraClient = new HydraClient(seedHydraServers);
+		hydraClient.reloadHydraServers();
 	}
 
 	public HydraClient hydraClient() {
 		return hydraClient;
+	}
+
+	//Method that reset the client this methods is needed only for tests.
+	void reset() {
+		hydraClient = null;
 	}
 }

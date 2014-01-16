@@ -2,7 +2,7 @@ package io.github.innotech.hydra.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -17,6 +17,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(HydraClient.class)
 public class HydraClientTest {
+
+	private static final String HYDRA = "hydra";
 
 	private static String TEST_HYDRA_SERVER = "http://localhost:8080/hydra-server";
 
@@ -35,7 +37,7 @@ public class HydraClientTest {
 	private HydraServersRequester hydraServersRequester;
 
 	@Test
-	public void shouldReturnAnExceptionIfApplicationNotExists() throws Exception {		
+	public void shouldReturnTheListOfServers() throws Exception {		
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
 		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
 
@@ -45,4 +47,15 @@ public class HydraClientTest {
 		assertNotNull("The list of string with the candidate urls", candidateUrls);
 		assertEquals("The list candidate server is not the expected", TEST_HYDRA_SERVERS,candidateUrls);
 	}
+	
+	@Test
+	public void shouldReloadHydraServers() throws Exception {		
+		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
+
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.reloadHydraServers();
+
+		verify(hydraServersRequester).getCandidateServers(TEST_HYDRA_SERVER,HYDRA);
+	}
+	
 }
