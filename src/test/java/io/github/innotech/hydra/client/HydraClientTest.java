@@ -58,4 +58,20 @@ public class HydraClientTest {
 		verify(hydraServersRequester).getCandidateServers(TEST_HYDRA_SERVER,HYDRA);
 	}
 	
+	@Test
+	public void shouldCacheTheResultForConsecutiveCalls() throws Exception{
+		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
+
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.get(APP_ID);
+		
+		//Call twice to ensure that the second call hit the cache. 
+		Set<String> candidateUrls = hydraClient.get(APP_ID);
+		
+		assertNotNull("The list of string with the candidate urls", candidateUrls);
+		assertEquals("The list candidate server is not the expected", TEST_HYDRA_SERVERS,candidateUrls);
+		
+		verify(hydraServersRequester,times(1)).getCandidateServers(TEST_HYDRA_SERVER,APP_ID);
+	}
 }

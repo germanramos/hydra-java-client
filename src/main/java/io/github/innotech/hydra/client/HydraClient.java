@@ -1,7 +1,8 @@
 package io.github.innotech.hydra.client;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * The client of hydra only expose the get method.
@@ -14,17 +15,29 @@ public class HydraClient {
 	
 	private LinkedHashSet<String> hydraServers;
 	
+	private Map<String,LinkedHashSet<String>> appServersCache = new HashMap<String,LinkedHashSet<String>>();
+	
 	//Only the factory can create hydra clients.
 	HydraClient(LinkedHashSet<String> seedHydraServers) {
 		this.hydraServers = seedHydraServers;
 	}
 
-	public Set<String> get(String appId) {
-		return hydraServerRequester.getCandidateServers(hydraServers.iterator().next(), appId);
+	public LinkedHashSet<String> get(String appId) {
+		if (appServersCache.containsKey(appId)){
+			return appServersCache.get(appId);
+		} else {
+			LinkedHashSet<String> candidateServers = hydraServerRequester.getCandidateServers(getActiveHydraServer(), appId);
+			appServersCache.put(appId, candidateServers);
+			return candidateServers;
+		}
 	}
 
-	public void reloadHydraServers() {
-		hydraServers = hydraServerRequester.getCandidateServers(hydraServers.iterator().next(), HYDRA_APP_ID);
+	private String getActiveHydraServer() {
+		return hydraServers.iterator().next();
+	}
+
+	void reloadHydraServers() {
+		hydraServers = get(HYDRA_APP_ID);
 	}
 }
 
