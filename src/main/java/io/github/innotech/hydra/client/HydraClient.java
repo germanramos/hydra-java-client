@@ -23,7 +23,11 @@ public class HydraClient {
 	}
 
 	public LinkedHashSet<String> get(String appId) {
-		if (appServersCache.containsKey(appId)){
+		return get(appId,false);
+	}
+
+	public LinkedHashSet<String> get(String appId, boolean shortcutCache) {
+		if (appServersCache.containsKey(appId) && !shortcutCache){
 			return appServersCache.get(appId);
 		} else {
 			LinkedHashSet<String> candidateServers = hydraServerRequester.getCandidateServers(getActiveHydraServer(), appId);
@@ -31,13 +35,13 @@ public class HydraClient {
 			return candidateServers;
 		}
 	}
-
+	
 	private String getActiveHydraServer() {
 		return hydraServers.iterator().next();
 	}
 
 	void reloadHydraServers() {
-		hydraServers = get(HYDRA_APP_ID);
+		hydraServers = get(HYDRA_APP_ID,true);
 	}
 }
 
