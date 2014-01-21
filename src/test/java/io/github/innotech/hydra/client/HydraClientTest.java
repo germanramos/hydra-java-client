@@ -21,6 +21,8 @@ public class HydraClientTest {
 	private static final String HYDRA = "hydra";
 
 	private static String TEST_HYDRA_SERVER = "http://localhost:8080/hydra-server";
+	
+	private static String TEST_APP_SERVER = "http://localhost:8080/app-server";
 
 	private static String APP_ID = "testAppId";
 
@@ -33,6 +35,16 @@ public class HydraClientTest {
 		}
 	};
 
+	LinkedHashSet <String> TEST_APP_SERVERS = new LinkedHashSet<String>() {
+
+		private static final long serialVersionUID = 1L;
+
+		{
+			this.add(TEST_APP_SERVER);
+		}
+	};
+
+	
 	@Mock
 	private HydraServersRequester hydraServersRequester;
 
@@ -59,20 +71,6 @@ public class HydraClientTest {
 	}
 	
 	@Test
-	public void shouldCacheTheResultForConsecutiveCalls() throws Exception{
-		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
-
-		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
-		hydraClient.get(APP_ID);
-		
-		//Call twice to ensure that the second call hit the cache. 
-		hydraClient.get(APP_ID);
-		
-		verify(hydraServersRequester,times(1)).getCandidateServers(TEST_HYDRA_SERVER,APP_ID);
-	}
-	
-	@Test
 	public void shouldCallShortcuttingTheCache() throws Exception{
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
 		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
@@ -87,17 +85,19 @@ public class HydraClientTest {
 	}
 	
 	@Test
-	public void shouldCallToServerIfInvalidateCache() throws Exception{
+	public void shouldReloadTheAppCache() throws Exception{
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID))
+			.thenReturn(TEST_HYDRA_SERVERS)
+			.thenReturn(TEST_APP_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
-		hydraClient.invalidateAppCache();
 		hydraClient.get(APP_ID);
 		
-		//Call twice to ensure that the second call hit the cache. 
-		hydraClient.get(APP_ID,true);
+		hydraClient.reloadApplicationCache();
 		
-		verify(hydraServersRequester,times(2)).getCandidateServers(TEST_HYDRA_SERVER,APP_ID);
+		LinkedHashSet<String> resultServer = hydraClient.get(APP_ID);
+		
+		assertEquals("The server must be the reloaded",TEST_APP_SERVERS,resultServer);
 	}
 }

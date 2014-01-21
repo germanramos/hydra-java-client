@@ -1,9 +1,12 @@
 package io.github.innotech.hydra.client;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.verify;
 
 import java.util.LinkedHashSet;
+import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Test;
@@ -31,11 +34,22 @@ public class HydraClientFactoryTest {
 	@Mock
 	private HydraClient hydraClient;
 	
+	@Mock(name="libertyTimer")
+	private Timer timer;
+	
+	@Mock(name="appTimer")
+	private Timer appTimer;
+	
+	@Mock
+	private HydraAppCacheMonitor hydraClientCacheMonitor;
+	
+	@Mock
+	private HydraServersMonitor hydraServersMonitor;
+	
 	@After
 	public void reset(){
 		HydraClientFactory.getInstance().reset();
 	}
-	
 	
 	@Test
 	public void shouldReturnAnUniqueInstanceOfAFactory(){
@@ -47,11 +61,9 @@ public class HydraClientFactoryTest {
 
 	@Test
 	public void shouldGetHydraUniqueClient() throws Exception{
-		PowerMockito.whenNew(HydraClient.class).withAnyArguments().thenReturn(hydraClient);
+		hydraClientFactoryTimersFixture();
 		
-		HydraClientFactory.getInstance().config(TEST_HYDRA_SERVERS);
-		
-		HydraClient hydraClient = HydraClientFactory.getInstance().hydraClient();
+		HydraClient hydraClient =  HydraClientFactory.getInstance().config(TEST_HYDRA_SERVERS);
 		HydraClient otherHydraClient = HydraClientFactory.getInstance().hydraClient();
 		
 		assertNotNull("Client must be not null",hydraClient);
@@ -61,15 +73,10 @@ public class HydraClientFactoryTest {
 	
 	@Test
 	public void shouldGetHydraUniqueClientWhenCallConfigManyTimes() throws Exception{
-		PowerMockito.whenNew(HydraClient.class).withAnyArguments().thenReturn(hydraClient);
+		hydraClientFactoryTimersFixture();
 		
-		HydraClientFactory.getInstance().config(TEST_HYDRA_SERVERS);
-		
-		HydraClient hydraClient = HydraClientFactory.getInstance().hydraClient();
-		
-		HydraClientFactory.getInstance().config(TEST_HYDRA_SERVERS);
-		
-		HydraClient otherHydraClient = HydraClientFactory.getInstance().hydraClient();
+		HydraClient hydraClient = HydraClientFactory.getInstance().config(TEST_HYDRA_SERVERS);
+		HydraClient otherHydraClient =  HydraClientFactory.getInstance().config(TEST_HYDRA_SERVERS);
 		
 		assertNotNull("Client must be not null",hydraClient);
 		assertNotNull("The second client must be not null",otherHydraClient);
@@ -78,10 +85,71 @@ public class HydraClientFactoryTest {
 	
 	@Test
 	public void shouldCallToRefreshHydraServerMethods() throws Exception{
-		PowerMockito.whenNew(HydraClient.class).withAnyArguments().thenReturn(hydraClient);
+		hydraClientFactoryTimersFixture();
 		
 		HydraClientFactory.getInstance().config(TEST_HYDRA_SERVERS);
 
 		verify(hydraClient).reloadHydraServers();
+	}
+	
+	@Test 
+	public void shouldAddATimerJobForRefreshHydraServersDefaultTimeOut() throws Exception{
+		hydraClientFactoryTimersFixture();
+		
+		HydraClientFactory.getInstance().config(TEST_HYDRA_SERVERS);
+		
+		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(60));
+	}
+	
+	@Test 
+	public void shouldAddATimerJobForRefreshHydraServersWithTimeOut() throws Exception{
+		hydraClientFactoryTimersFixture();
+		
+		HydraClientFactory.getInstance().withHydraTimeOut(10l).config(TEST_HYDRA_SERVERS);
+		
+		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
+	}
+
+	@Test 
+	public void shouldAddATimerJobForRefreshHydraServersAndTimeOut() throws Exception{
+		hydraClientFactoryTimersFixture();
+		
+		HydraClientFactory.getInstance().andHydraTimeOut(10l).config(TEST_HYDRA_SERVERS);
+		
+		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
+	}
+	
+	@Test 
+	public void shouldAddATimerJobForRefreshAppServersDefaultTimeOut() throws Exception{
+		hydraClientFactoryTimersFixture();
+		
+		HydraClientFactory.getInstance().config(TEST_HYDRA_SERVERS);
+		
+		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(20));
+	}
+	
+	@Test 
+	public void shouldAddATimerJobForRefreshAppServersWithTimeOut() throws Exception{
+		hydraClientFactoryTimersFixture();
+		
+		HydraClientFactory.getInstance().withAppsTimeOut(90l).config(TEST_HYDRA_SERVERS);
+		
+		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
+	}
+	
+	@Test 
+	public void shouldAddATimerJobForRefreshAppServersAndTimeOut() throws Exception{
+		hydraClientFactoryTimersFixture();
+		
+		HydraClientFactory.getInstance().andAppsTimeOut(90l).config(TEST_HYDRA_SERVERS);
+		
+		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
+	}
+	
+	private void hydraClientFactoryTimersFixture() throws Exception {
+		PowerMockito.whenNew(Timer.class).withAnyArguments().thenReturn(timer,appTimer);
+		PowerMockito.whenNew(HydraAppCacheMonitor.class).withAnyArguments().thenReturn(hydraClientCacheMonitor);
+		PowerMockito.whenNew(HydraServersMonitor.class).withAnyArguments().thenReturn(hydraServersMonitor);
+		PowerMockito.whenNew(HydraClient.class).withAnyArguments().thenReturn(hydraClient);
 	}
 }
