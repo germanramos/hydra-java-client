@@ -5,7 +5,7 @@ import java.util.TimerTask;
 /**
  * Invalidate hydra servers.
  */
-public class HydraServersMonitor extends TimerTask {
+class HydraServersMonitor extends TimerTask {
 
 	private HydraClient hydraClient;
 	

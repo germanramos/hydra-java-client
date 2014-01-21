@@ -6,7 +6,7 @@ import java.util.TimerTask;
 /**
  * Invalidate application's cache in the hydra client.
  */
-public class HydraAppCacheMonitor extends TimerTask {
+class HydraAppCacheMonitor extends TimerTask {
 
 	private HydraClient hydraClient;
 	
