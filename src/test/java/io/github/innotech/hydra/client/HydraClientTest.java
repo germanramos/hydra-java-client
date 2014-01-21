@@ -100,4 +100,25 @@ public class HydraClientTest {
 		
 		assertEquals("The server must be the reloaded",TEST_APP_SERVERS,resultServer);
 	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void shouldNotAcceptNullAplications() throws Exception{
+		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.get(null);
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void shouldNotAcceptEmptyAplications() throws Exception{
+		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.get("");
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void shouldNotAcceptWhiteSpaceOnlyAplications() throws Exception{
+		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.get("      ");
+	}
 }

@@ -1,5 +1,7 @@
 package io.github.innotech.hydra.client;
 
+import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
+
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -24,7 +26,7 @@ public class HydraClient {
 	private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
 	private ReentrantReadWriteLock hydraServersReadWriteLock = new ReentrantReadWriteLock();
-	
+
 	/**
 	 * The constructor have default visibility because only the factory can
 	 * create hydra clients.
@@ -46,30 +48,55 @@ public class HydraClient {
 	 * application. This method can shortcut the cache.
 	 */
 	public LinkedHashSet<String> get(String appId, boolean shortcutCache) {
-		ReadLock readLock = readWriteLock.readLock();
+		if (appId == null) {
+			throw new IllegalArgumentException();
+		}
 
+		if (appId.trim().isEmpty()) {
+			throw new IllegalArgumentException();
+		}
+
+		ReadLock readLock = readWriteLock.readLock();
 		try {
 			readLock.lock();
 			if (appServersCache.containsKey(appId) && !shortcutCache) {
 				return appServersCache.get(appId);
-			} else {
-				return requestCandidateServers(appId);
 			}
 		} finally {
 			readLock.unlock();
 		}
+
+		return requestCandidateRefreshingCache(appId);
 	}
-	
+
+	private LinkedHashSet<String> requestCandidateRefreshingCache(String appId) {
+		LinkedHashSet<String> servers = requestCandidateServers(appId);
+		refreshCache(appId, servers);
+
+		return servers;
+	}
+
+	private void refreshCache(String appId, LinkedHashSet<String> servers) {
+		WriteLock writeLock = readWriteLock.writeLock();
+
+		try {
+			writeLock.lock();
+			appServersCache.put(appId, servers);
+		} finally {
+			writeLock.unlock();
+		}
+	}
+
 	/**
-	 * Use a read lock to ensure that not use hydra servers when write. 
+	 * Use a read lock to ensure that not use hydra servers when write.
 	 */
-	private String getActiveHydraServer() {
+	private String getCurrentHydraServer() {
 		ReadLock readLock = hydraServersReadWriteLock.readLock();
-		
-		try{
+
+		try {
 			readLock.lock();
 			return hydraServers.iterator().next();
-		} finally{
+		} finally {
 			readLock.unlock();
 		}
 	}
@@ -77,20 +104,21 @@ public class HydraClient {
 	void reloadHydraServers() {
 		LinkedHashSet<String> newHydraServers = requestCandidateServers(HYDRA_APP_ID);
 		WriteLock writeLock = hydraServersReadWriteLock.writeLock();
-		
-		try{
+
+		try {
 			writeLock.lock();
 			hydraServers = newHydraServers;
-		} finally{
+		} finally {
 			writeLock.unlock();
 		}
 	}
-	
+
 	/**
-	 * This method reload the data of the app cache. First requests the hydra server for the new information
-	 * for the register apps. Then refresh the data of all the app. This process is made by other thread to synchronize 
-	 * with the real time operation we use a write/read lock. Only a thread in write mode is allowed to actualize the 
-	 * cache.
+	 * This method reload the data of the app cache. First requests the hydra
+	 * server for the new information for the register apps. Then refresh the
+	 * data of all the app. This process is made by other thread to synchronize
+	 * with the real time operation we use a write/read lock. Only a thread in
+	 * write mode is allowed to actualize the cache.
 	 */
 	void reloadApplicationCache() {
 		refreshAppCache(retrieveNewServerConfiguration());
@@ -120,12 +148,19 @@ public class HydraClient {
 
 	private void refreshAppCache(Map<String, LinkedHashSet<String>> newAppServerCache) {
 		WriteLock writeLock = readWriteLock.writeLock();
-		writeLock.lock();
-		appServersCache = newAppServerCache;
-		writeLock.unlock();
+		try {
+			writeLock.lock();
+			appServersCache = newAppServerCache;
+		} finally {
+			writeLock.unlock();
+		}
 	}
-	
+
 	private LinkedHashSet<String> requestCandidateServers(String appId) {
-		return hydraServerRequester.getCandidateServers(getActiveHydraServer(), appId);
+		try {
+			return hydraServerRequester.getCandidateServers(getCurrentHydraServer(), appId);
+		} catch (InaccessibleServer e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

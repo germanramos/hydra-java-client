@@ -3,7 +3,7 @@ package io.github.innotech.hydra.client;
 import java.util.TimerTask;
 
 /**
- * Invalidate hydra servers.
+ * Timer task that reload hydra server cache.
  */
 class HydraServersMonitor extends TimerTask {
 

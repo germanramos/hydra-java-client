@@ -2,7 +2,6 @@ package io.github.innotech.hydra.client;
 
 import java.util.TimerTask;
 
-
 /**
  * Invalidate application's cache in the hydra client.
  */

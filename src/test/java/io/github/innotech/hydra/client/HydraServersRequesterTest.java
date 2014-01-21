@@ -4,7 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
+import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
+
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Set;
 
 import org.apache.http.HttpEntity;
@@ -68,5 +71,35 @@ public class HydraServersRequesterTest {
 		
 		assertNotNull("The candidate servers must be not null",candidateServers);
 		assertEquals("The number of elements must be the expected",3,candidateServers.size());
+	}
+	
+	@Test(expected=InaccessibleServer.class)
+	public void shouldFailWhenReturnTheServerList() throws Exception {
+		PowerMockito.whenNew(HttpGet.class).withArguments(TEST_HYDRA_SERVER + "/" + APP_ID).thenReturn(httpGet);
+		PowerMockito.mockStatic(HttpClientBuilder.class);
+		
+		when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
+		when(httpClientBuilder.build()).thenReturn(httpClient);
+		
+		when(httpClient.execute(httpGet)).thenReturn(httpResponse);
+		when(httpResponse.getStatusLine()).thenReturn(statusLine);
+		when(statusLine.getStatusCode()).thenReturn(400);
+
+		HydraServersRequester hydraServersRequester = new HydraServersRequester();
+		hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER, APP_ID);
+	}
+	
+	@Test(expected=InaccessibleServer.class)
+	public void shouldFailWhenExecuteTheRequest() throws Exception {
+		PowerMockito.whenNew(HttpGet.class).withArguments(TEST_HYDRA_SERVER + "/" + APP_ID).thenReturn(httpGet);
+		PowerMockito.mockStatic(HttpClientBuilder.class);
+		
+		when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
+		when(httpClientBuilder.build()).thenReturn(httpClient);
+		
+		when(httpClient.execute(httpGet)).thenThrow(new IOException());
+
+		HydraServersRequester hydraServersRequester = new HydraServersRequester();
+		hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER, APP_ID);
 	}
 }
