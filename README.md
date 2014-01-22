@@ -74,16 +74,18 @@ The time is expressed in seconds.
 
 ```
     HydraClient hydraClient = HydraClientFactory.getIntance().
+            config(hydraServerSeed).
             withHydraTimeOut(90l).
-        config(hydraServerSeed);
+        build();
 ```
 
 ###Hydra servers number of retries
 
 ```
     HydraClient hydraClient = HydraClientFactory.getIntance().
+            config(hydraServerSeed).
             withNumberOfRetries(3).
-        config(hydraServerSeed);
+        build();
 ```
 
 ###Wait times between retries
@@ -92,17 +94,19 @@ The time is expressed in milliseconds
 
 ```
     HydraClient hydraClient = HydraClientFactory.getIntance().
+            config(hydraServerSeed).
             waitBetweenAllServersRetry(300).
-        config(hydraServerSeed);
+        build();
 ```
 
 ###A complex configuration example
 
 ```
     HydraClient hydraClient = HydraClientFactory.getIntance().
+            config(hydraServerSeed).
             withAppsTimeOut(10l).
             andHydraTimeOut(90l).
             andNumberOfRetries(3).
             waitBetweenAllServersRetry(300).
-        config(hydraServerSeed);
+        build();
 ```
