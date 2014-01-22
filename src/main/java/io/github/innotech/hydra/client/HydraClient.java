@@ -1,6 +1,7 @@
 package io.github.innotech.hydra.client;
 
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
+import io.github.innotech.hydra.client.exceptions.NoneServersAccessible;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -26,6 +27,8 @@ public class HydraClient {
 	private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
 	private ReentrantReadWriteLock hydraServersReadWriteLock = new ReentrantReadWriteLock();
+	
+	private static final Integer DEFAULT_RETRIES_NUMBER = 10;
 
 	/**
 	 * The constructor have default visibility because only the factory can
@@ -156,11 +159,35 @@ public class HydraClient {
 		}
 	}
 
+	//This method contains a mutual exclusion section because access the hydra server set
+	//to reorder it. Must be called outside any other hydraServersReadWriteLock mutual exclussion
+	//region.
 	private LinkedHashSet<String> requestCandidateServers(String appId) {
+		Integer retries = 0;
+		
+		while(retries < DEFAULT_RETRIES_NUMBER){
+			String currentHydraServer = getCurrentHydraServer();
+			try {
+				return hydraServerRequester.getCandidateServers(currentHydraServer, appId);
+			} catch (InaccessibleServer e) {
+				reorderServers(currentHydraServer);
+				retries++;
+			}
+		}
+		
+		throw new NoneServersAccessible();
+	}
+
+	//Rotate the elements put the first elements at the end of the hydra server list.
+	private void reorderServers(String currentHydraServer) {
+		WriteLock writeLock = hydraServersReadWriteLock.writeLock();
+		
 		try {
-			return hydraServerRequester.getCandidateServers(getCurrentHydraServer(), appId);
-		} catch (InaccessibleServer e) {
-			throw new RuntimeException(e);
+			writeLock.lock();
+			hydraServers.remove(currentHydraServer);
+			hydraServers.add(currentHydraServer);
+		} finally {
+			writeLock.unlock();
 		}
 	}
 }

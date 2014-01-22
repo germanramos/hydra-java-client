@@ -40,16 +40,17 @@ public class HydraClientFactory {
 	 * refresh the hydra server list querying the seed servers. 
 	 */
 	public HydraClient config(LinkedHashSet<String> seedHydraServers) {
-		if (hydraClient != null){
-			return hydraClient;
-		}
-		
+
 		if (seedHydraServers == null) {
 			throw new IllegalArgumentException();
 		}
 		
 		if (seedHydraServers.size() == 0){
 			throw new IllegalArgumentException();
+		}
+		
+		if (hydraClient != null){
+			return hydraClient;
 		}
 				
 		hydraClient = new HydraClient(seedHydraServers);
