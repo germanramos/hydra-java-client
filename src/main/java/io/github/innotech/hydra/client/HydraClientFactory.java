@@ -10,60 +10,63 @@ import java.util.concurrent.TimeUnit;
 public class HydraClientFactory {
 
 	private static final Long DEFAULT_HYDRA_SERVER_REFRESH = TimeUnit.SECONDS.toMillis(60l);
-	
+
 	private static final Long DEFAULT_HYDRA_APPS_REFRESH = TimeUnit.SECONDS.toMillis(20l);
 
 	private static HydraClientFactory hydraClientFactory = new HydraClientFactory();
-	
+
 	private HydraClient hydraClient;
-	
+
 	private Long hydraServerRefreshTime = DEFAULT_HYDRA_SERVER_REFRESH;
-	
+
 	private Long hydraAppsRefreshTime = DEFAULT_HYDRA_APPS_REFRESH;
-	
+
 	private Timer hydraTimer;
-	
+
 	private Timer appsTimer;
 
 	private static final Integer DEFAULT_RETRIES_NUMBER = 10;
-	
+
 	private Integer numberOfRetries = DEFAULT_RETRIES_NUMBER;
-	
+
 	private Integer millisecondsToRetry = 0;
-	
+
+	private LinkedHashSet<String> hydraServers;
+
 	/**
 	 * Default constructor private according the pattern.
 	 */
-	private HydraClientFactory(){
+	private HydraClientFactory() {
 	}
 
-	public static HydraClientFactory getInstance() {
+	public static HydraClientFactory config(LinkedHashSet<String> seedHydraServers) {
+		hydraClientFactory.hydraServers = seedHydraServers;
 		return hydraClientFactory;
 	}
 
 	/**
-	 * Assign the servers for hydra initial search. Create the instance of hydra client,
-	 * refresh the hydra server list querying the seed servers. 
+	 * Assign the servers for hydra initial search. Create the instance of hydra
+	 * client, refresh the hydra server list querying the seed servers.
 	 */
-	public HydraClient config(LinkedHashSet<String> seedHydraServers) {
+	public HydraClient build() {
 
-		if (seedHydraServers == null) {
+		if (hydraServers == null) {
 			throw new IllegalArgumentException();
 		}
-		
-		if (seedHydraServers.size() == 0){
+
+		if (hydraServers.size() == 0) {
 			throw new IllegalArgumentException();
 		}
-		
-		if (hydraClient != null){
+
+		if (hydraClient != null) {
 			return hydraClient;
 		}
-				
-		hydraClient = new HydraClient(seedHydraServers);
+
+		hydraClient = new HydraClient(hydraServers);
 		hydraClient.reloadHydraServers();
 		hydraClient.setMaxNumberOfRetries(numberOfRetries);
 		hydraClient.setWaitBetweenAllServersRetry(millisecondsToRetry);
-		
+
 		configureCacheRefreshTimers();
 
 		return hydraClient;
@@ -72,39 +75,39 @@ public class HydraClientFactory {
 	private void configureCacheRefreshTimers() {
 		hydraTimer = new Timer(true);
 		appsTimer = new Timer(true);
-		
-		hydraTimer.schedule(new HydraServersMonitor(hydraClient),0,hydraServerRefreshTime);
-		appsTimer.schedule(new HydraAppCacheMonitor(hydraClient),0,hydraAppsRefreshTime);
+
+		hydraTimer.schedule(new HydraServersMonitor(hydraClient), 0, hydraServerRefreshTime);
+		appsTimer.schedule(new HydraAppCacheMonitor(hydraClient), 0, hydraAppsRefreshTime);
 	}
 
-	public HydraClient hydraClient() {
-		return hydraClient;
+	public static HydraClient hydraClient() {
+		return hydraClientFactory.getHydraClient();
 	}
 
-	//Method that reset the client this methods is needed only for tests.
-	void reset() {
-		hydraClient = null;
+	// Method that reset the client this methods is needed only for tests.
+	static void reset() {
+		hydraClientFactory.hydraClient = null;
 	}
 
 	public HydraClientFactory withHydraTimeOut(Long timeOutSeconds) {
-		if (timeOutSeconds == null){
+		if (timeOutSeconds == null) {
 			throw new IllegalArgumentException();
 		}
-		
+
 		hydraServerRefreshTime = TimeUnit.SECONDS.toMillis(timeOutSeconds);
 		return this;
 	}
 
 	public HydraClientFactory withAppsTimeOut(Long timeOutSeconds) {
-		
-		if (timeOutSeconds == null){
+
+		if (timeOutSeconds == null) {
 			throw new IllegalArgumentException();
 		}
-		
+
 		hydraAppsRefreshTime = TimeUnit.SECONDS.toMillis(timeOutSeconds);
 		return this;
 	}
-	
+
 	public HydraClientFactory andAppsTimeOut(Long timeOutSeconds) {
 		return withAppsTimeOut(timeOutSeconds);
 	}
@@ -126,4 +129,9 @@ public class HydraClientFactory {
 		this.millisecondsToRetry = millisecondsToRetry;
 		return this;
 	}
+
+	private HydraClient getHydraClient() {
+		return hydraClient;
+	}
+
 }

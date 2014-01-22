@@ -49,7 +49,6 @@ public class HydraClientTest {
 			this.add(TEST_APP_SERVER);
 		}
 	};
-
 	
 	@Mock
 	private HydraServersRequester hydraServersRequester;
