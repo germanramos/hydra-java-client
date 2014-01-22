@@ -28,7 +28,7 @@ public class HydraClient {
 
 	private ReentrantReadWriteLock hydraServersReadWriteLock = new ReentrantReadWriteLock();
 	
-	private static final Integer DEFAULT_RETRIES_NUMBER = 10;
+	private Integer numberOfRetries = 0;
 
 	/**
 	 * The constructor have default visibility because only the factory can
@@ -160,12 +160,13 @@ public class HydraClient {
 	}
 
 	//This method contains a mutual exclusion section because access the hydra server set
-	//to reorder it. Must be called outside any other hydraServersReadWriteLock mutual exclussion
+	//to reorder it. Must be called outside any other hydraServersReadWriteLock mutual exclusion
 	//region.
 	private LinkedHashSet<String> requestCandidateServers(String appId) {
 		Integer retries = 0;
+		Integer totalNumberOfRetries = numberOfRetries*getNumberOfHydraServers(); 
 		
-		while(retries < DEFAULT_RETRIES_NUMBER){
+		while(retries < totalNumberOfRetries){
 			String currentHydraServer = getCurrentHydraServer();
 			try {
 				return hydraServerRequester.getCandidateServers(currentHydraServer, appId);
@@ -189,5 +190,20 @@ public class HydraClient {
 		} finally {
 			writeLock.unlock();
 		}
+	}
+	
+	private int getNumberOfHydraServers() {
+		ReadLock readLock = hydraServersReadWriteLock.readLock();
+		
+		try {
+			readLock.lock();
+			return hydraServers.size();
+		} finally {
+			readLock.unlock();
+		}
+	}
+	
+	void setNumberOfRetries(Integer numberOfRetries) {
+		this.numberOfRetries = numberOfRetries;
 	}
 }

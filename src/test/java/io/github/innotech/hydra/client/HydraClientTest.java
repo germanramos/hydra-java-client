@@ -111,9 +111,6 @@ public class HydraClientTest {
 		
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.get(APP_ID,true);
-		
-		verify(hydraServersRequester,times(10)).getCandidateServers(TEST_HYDRA_SERVER,APP_ID);
-		verify(hydraServersRequester,times(10)).getCandidateServers(ANOTHER_TEST_HYDRA_SERVER,APP_ID);
 	}
 	
 	@Test

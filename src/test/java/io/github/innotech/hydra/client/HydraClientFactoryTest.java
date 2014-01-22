@@ -146,6 +146,26 @@ public class HydraClientFactoryTest {
 		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
 	}
 	
+	@Test 
+	public void shouldAddNumberOfRetries() throws Exception{
+		hydraClientFactoryTimersFixture();
+		
+		HydraClientFactory.getInstance().withNumberOfRetries(30).config(TEST_HYDRA_SERVERS);
+		
+		verify(hydraClient).setNumberOfRetries(30);
+		
+	}
+	
+	@Test 
+	public void shouldAddNumberOfRetriesAnd() throws Exception{
+		hydraClientFactoryTimersFixture();
+		
+		HydraClientFactory.getInstance().andNumberOfRetries(30).config(TEST_HYDRA_SERVERS);
+		
+		verify(hydraClient).setNumberOfRetries(30);
+		
+	}
+	
 	@Test(expected=IllegalArgumentException.class) 
 	public void shouldReturnIllegalArgumentExceptionWhenNullAppTimeOut() throws Exception{
 		HydraClientFactory.getInstance().andAppsTimeOut(null);

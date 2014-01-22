@@ -24,6 +24,10 @@ public class HydraClientFactory {
 	private Timer hydraTimer;
 	
 	private Timer appsTimer;
+
+	private static final Integer DEFAULT_RETRIES_NUMBER = 10;
+	
+	private Integer numberOfRetries = DEFAULT_RETRIES_NUMBER;
 	
 	/**
 	 * Default constructor private according the pattern.
@@ -55,7 +59,8 @@ public class HydraClientFactory {
 				
 		hydraClient = new HydraClient(seedHydraServers);
 		hydraClient.reloadHydraServers();
-
+		hydraClient.setNumberOfRetries(numberOfRetries);
+		
 		configureCacheRefreshTimers();
 
 		return hydraClient;
@@ -97,11 +102,21 @@ public class HydraClientFactory {
 		return this;
 	}
 
+	
 	public HydraClientFactory andAppsTimeOut(Long timeOutSeconds) {
 		return withAppsTimeOut(timeOutSeconds);
 	}
 
 	public HydraClientFactory andHydraTimeOut(Long timeOutSeconds) {
 		return withHydraTimeOut(timeOutSeconds);
+	}
+
+	public HydraClientFactory withNumberOfRetries(int numberOfRetries) {
+		this.numberOfRetries = numberOfRetries;
+		return this;
+	}
+
+	public HydraClientFactory andNumberOfRetries(int numberOfRetries) {
+		return withNumberOfRetries(numberOfRetries);
 	}
 }
