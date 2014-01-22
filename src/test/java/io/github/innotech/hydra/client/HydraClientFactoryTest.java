@@ -146,6 +146,26 @@ public class HydraClientFactoryTest {
 		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
 	}
 	
+	@Test(expected=IllegalArgumentException.class) 
+	public void shouldReturnIllegalArgumentExceptionWhenNullAppTimeOut() throws Exception{
+		HydraClientFactory.getInstance().andAppsTimeOut(null);
+	}
+	
+	@Test(expected=IllegalArgumentException.class) 
+	public void shouldReturnIllegalArgumentExceptionWhenNullHydraTimeOut() throws Exception{
+		HydraClientFactory.getInstance().andHydraTimeOut(null);
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void shouldNotCreateAClientWithNullSeedServer() throws Exception{
+		HydraClientFactory.getInstance().config(null);
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void shouldNotCreateAClientWithoutSeedServer() throws Exception{
+		HydraClientFactory.getInstance().config(new LinkedHashSet<String>());
+	}
+	
 	private void hydraClientFactoryTimersFixture() throws Exception {
 		PowerMockito.whenNew(Timer.class).withAnyArguments().thenReturn(timer,appTimer);
 		PowerMockito.whenNew(HydraAppCacheMonitor.class).withAnyArguments().thenReturn(hydraClientCacheMonitor);

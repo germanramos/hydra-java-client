@@ -32,14 +32,6 @@ public class HydraClient {
 	 * create hydra clients.
 	 */
 	HydraClient(LinkedHashSet<String> seedHydraServers) {
-		if (seedHydraServers == null) {
-			throw new IllegalArgumentException();
-		}
-		
-		if (seedHydraServers.size() == 0){
-			throw new IllegalArgumentException();
-		}
-		
 		this.hydraServers = seedHydraServers;
 	}
 

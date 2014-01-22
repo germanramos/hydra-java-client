@@ -122,15 +122,5 @@ public class HydraClientTest {
 		hydraClient.get("      ");
 	}
 	
-	@Test(expected=IllegalArgumentException.class)
-	public void shouldNotCreateAClientWithNullSeedServer() throws Exception{
-		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		new HydraClient(null);
-	}
 	
-	@Test(expected=IllegalArgumentException.class)
-	public void shouldNotCreateAClientWithoutSeedServer() throws Exception{
-		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		new HydraClient(new LinkedHashSet<String>());
-	}
 }

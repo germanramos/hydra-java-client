@@ -43,6 +43,14 @@ public class HydraClientFactory {
 		if (hydraClient != null){
 			return hydraClient;
 		}
+		
+		if (seedHydraServers == null) {
+			throw new IllegalArgumentException();
+		}
+		
+		if (seedHydraServers.size() == 0){
+			throw new IllegalArgumentException();
+		}
 				
 		hydraClient = new HydraClient(seedHydraServers);
 		hydraClient.reloadHydraServers();
@@ -70,11 +78,20 @@ public class HydraClientFactory {
 	}
 
 	public HydraClientFactory withHydraTimeOut(Long timeOutSeconds) {
+		if (timeOutSeconds == null){
+			throw new IllegalArgumentException();
+		}
+		
 		hydraServerRefreshTime = TimeUnit.SECONDS.toMillis(timeOutSeconds);
 		return this;
 	}
 
 	public HydraClientFactory withAppsTimeOut(Long timeOutSeconds) {
+		
+		if (timeOutSeconds == null){
+			throw new IllegalArgumentException();
+		}
+		
 		hydraAppsRefreshTime = TimeUnit.SECONDS.toMillis(timeOutSeconds);
 		return this;
 	}
