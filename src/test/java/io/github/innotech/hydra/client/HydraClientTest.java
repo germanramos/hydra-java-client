@@ -110,6 +110,7 @@ public class HydraClientTest {
 		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER,APP_ID)).thenThrow(new InaccessibleServer());
 		
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.setMaxNumberOfRetries(1);
 		hydraClient.get(APP_ID,true);
 	}
 	

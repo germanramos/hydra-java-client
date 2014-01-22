@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -28,7 +29,9 @@ public class HydraClient {
 
 	private ReentrantReadWriteLock hydraServersReadWriteLock = new ReentrantReadWriteLock();
 	
-	private Integer numberOfRetries = 0;
+	private Integer maxNumberOfRetries = 0;
+
+	private Integer waitBetweenAllServersRetry = 0;
 
 	/**
 	 * The constructor have default visibility because only the factory can
@@ -164,9 +167,14 @@ public class HydraClient {
 	//region.
 	private LinkedHashSet<String> requestCandidateServers(String appId) {
 		Integer retries = 0;
-		Integer totalNumberOfRetries = numberOfRetries*getNumberOfHydraServers(); 
+		Integer numberOfHydraServers = getNumberOfHydraServers();
+		Integer totalNumberOfRetries = maxNumberOfRetries*numberOfHydraServers; 
 		
-		while(retries < totalNumberOfRetries){
+		
+		//Infinite loop if maxNumberOfRetries is set to 0. In this case
+		//retries can overflow it value, java automatically set to the integer minimum value 
+		//an the loop goes on
+		while(maxNumberOfRetries == 0 || retries < totalNumberOfRetries){
 			String currentHydraServer = getCurrentHydraServer();
 			try {
 				return hydraServerRequester.getCandidateServers(currentHydraServer, appId);
@@ -174,9 +182,21 @@ public class HydraClient {
 				reorderServers(currentHydraServer);
 				retries++;
 			}
+			
+			if (retries%numberOfHydraServers == 0){
+				waitUntilTheNextRetry();
+			}
 		}
 		
 		throw new NoneServersAccessible();
+	}
+
+	private void waitUntilTheNextRetry() {
+		try {
+			TimeUnit.MILLISECONDS.sleep(waitBetweenAllServersRetry);
+		} catch (InterruptedException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	//Rotate the elements put the first elements at the end of the hydra server list.
@@ -203,7 +223,15 @@ public class HydraClient {
 		}
 	}
 	
-	void setNumberOfRetries(Integer numberOfRetries) {
-		this.numberOfRetries = numberOfRetries;
+	void setMaxNumberOfRetries(Integer numberOfRetries) {
+		this.maxNumberOfRetries = numberOfRetries;
+	}
+
+	
+	/**
+	 * The time that the client wait between two retries when try in all hydra servers.
+	 */
+	void setWaitBetweenAllServersRetry(int millisecondsToRetry) {
+		this.waitBetweenAllServersRetry  = millisecondsToRetry;
 	}
 }

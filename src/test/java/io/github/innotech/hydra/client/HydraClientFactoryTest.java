@@ -152,7 +152,7 @@ public class HydraClientFactoryTest {
 		
 		HydraClientFactory.getInstance().withNumberOfRetries(30).config(TEST_HYDRA_SERVERS);
 		
-		verify(hydraClient).setNumberOfRetries(30);
+		verify(hydraClient).setMaxNumberOfRetries(30);
 		
 	}
 	
@@ -162,8 +162,16 @@ public class HydraClientFactoryTest {
 		
 		HydraClientFactory.getInstance().andNumberOfRetries(30).config(TEST_HYDRA_SERVERS);
 		
-		verify(hydraClient).setNumberOfRetries(30);
+		verify(hydraClient).setMaxNumberOfRetries(30);
+	}
+	
+	@Test
+	public void shouldSetTheNumberOfMillisecondAllServerCallRetry() throws Exception{
+		hydraClientFactoryTimersFixture();
 		
+		HydraClientFactory.getInstance().waitBetweenAllServersRetry(30).config(TEST_HYDRA_SERVERS);
+		
+		verify(hydraClient).setWaitBetweenAllServersRetry(30);
 	}
 	
 	@Test(expected=IllegalArgumentException.class) 

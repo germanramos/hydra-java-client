@@ -29,6 +29,8 @@ public class HydraClientFactory {
 	
 	private Integer numberOfRetries = DEFAULT_RETRIES_NUMBER;
 	
+	private Integer millisecondsToRetry = 0;
+	
 	/**
 	 * Default constructor private according the pattern.
 	 */
@@ -59,7 +61,8 @@ public class HydraClientFactory {
 				
 		hydraClient = new HydraClient(seedHydraServers);
 		hydraClient.reloadHydraServers();
-		hydraClient.setNumberOfRetries(numberOfRetries);
+		hydraClient.setMaxNumberOfRetries(numberOfRetries);
+		hydraClient.setWaitBetweenAllServersRetry(millisecondsToRetry);
 		
 		configureCacheRefreshTimers();
 
@@ -101,7 +104,6 @@ public class HydraClientFactory {
 		hydraAppsRefreshTime = TimeUnit.SECONDS.toMillis(timeOutSeconds);
 		return this;
 	}
-
 	
 	public HydraClientFactory andAppsTimeOut(Long timeOutSeconds) {
 		return withAppsTimeOut(timeOutSeconds);
@@ -118,5 +120,10 @@ public class HydraClientFactory {
 
 	public HydraClientFactory andNumberOfRetries(int numberOfRetries) {
 		return withNumberOfRetries(numberOfRetries);
+	}
+
+	public HydraClientFactory waitBetweenAllServersRetry(int millisecondsToRetry) {
+		this.millisecondsToRetry = millisecondsToRetry;
+		return this;
 	}
 }
