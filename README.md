@@ -63,9 +63,9 @@ This call shortcut the internal cache, requests the candidate servers and refres
 The time is expressed seconds.
 
 ```
-    HydraClient hydraClient = HydraClientFactory
-            .config(hydraServerSeed).
-            .withAppsTimeOut(10l).
+    HydraClient hydraClient = HydraClientFactory.
+            config(hydraServerSeed).
+            withAppsTimeOut(10l).
         build();
 ```
 
