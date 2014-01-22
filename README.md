@@ -28,7 +28,7 @@ Take the generated jar in target directory.
 The basic way to connect to hydra using the java client is:
 
 ```
-    HydraClient hydraClient = HydraClientFactory.getIntance().config(hydraServerSeed);
+    HydraClient hydraClient = HydraClientFactory.config(hydraServerSeed).build();
     LinkedHashSet<String> candidateServers = hydraClient.get(applicationId);
   
     //Some network call using the first of the candidate servers.
@@ -38,7 +38,7 @@ The basic way to connect to hydra using the java client is:
 To obtain the client after the configuration:
 
 ```
-    HydraClient hydraClient = HydraClientFactory.getIntance().hydraClient();
+    HydraClient hydraClient = HydraClientFactory.hydraClient();
     LinkedHashSet<String> candidateServers = hydraClient.get(applicationId);
   
     //Some network call using the first of the candidate servers.
@@ -63,9 +63,10 @@ This call shortcut the internal cache, requests the candidate servers and refres
 The time is expressed seconds.
 
 ```
-    HydraClient hydraClient = HydraClientFactory.getIntance().
-            withAppsTimeOut(10l).
-        config(hydraServerSeed);
+    HydraClient hydraClient = HydraClientFactory
+            .config(hydraServerSeed).
+            .withAppsTimeOut(10l).
+        build();
 ```
 
 ###Hydra servers cache refresh time
@@ -73,7 +74,7 @@ The time is expressed seconds.
 The time is expressed in seconds.
 
 ```
-    HydraClient hydraClient = HydraClientFactory.getIntance().
+    HydraClient hydraClient = HydraClientFactory.
             config(hydraServerSeed).
             withHydraTimeOut(90l).
         build();
@@ -82,7 +83,7 @@ The time is expressed in seconds.
 ###Hydra servers number of retries
 
 ```
-    HydraClient hydraClient = HydraClientFactory.getIntance().
+    HydraClient hydraClient = HydraClientFactory.
             config(hydraServerSeed).
             withNumberOfRetries(3).
         build();
@@ -93,7 +94,7 @@ The time is expressed in seconds.
 The time is expressed in milliseconds
 
 ```
-    HydraClient hydraClient = HydraClientFactory.getIntance().
+    HydraClient hydraClient = HydraClientFactory.
             config(hydraServerSeed).
             waitBetweenAllServersRetry(300).
         build();
@@ -102,7 +103,7 @@ The time is expressed in milliseconds
 ###A complex configuration example
 
 ```
-    HydraClient hydraClient = HydraClientFactory.getIntance().
+    HydraClient hydraClient = HydraClientFactory.
             config(hydraServerSeed).
             withAppsTimeOut(10l).
             andHydraTimeOut(90l).
