@@ -1,6 +1,8 @@
 #hydra-java-client
 
-Client of Hydra development in java.
+Client of Hydra development in java. Hydra is a multi-cloud broker system.Provides a multi-cloud application discovery, management and balancing service. Hydra attempts to ease the routing and balancing burden from servers and delegate it on the client 
+
+For a complete information about the project visit http://innotech.github.io/hydra/.
 
 ##Obtain client
 
@@ -35,6 +37,18 @@ The basic way to connect to hydra using the java client is:
 
 ```
 
+The config method take only one parameter the hydraServerSeed, this is a LinkedHashSet of String contains the initial urls where hydra client search the hydra server. Once the server is discovered the client automatically refresh the list of the available serves.
+
+In this case the rest of config parameters are configured using the following default values.
+
+###Configuration parameters
+Name | Default value | Description 
+:---  | :--- | :---
+AppsCacheRefreshTime | 60 seconds | The time period that the cache that store the candidate servers for applications is invalidated.
+HydraCacheRefreshTime| 20 seconds | The time period that the cache that store the hydra servers is invalidated.
+NumberOfRetries| 10 | The client try this number of times to connect to all the register hydra servers.
+WaitBetweenAllServersRetry| 300 milliseconds | The time between all hydra servers are tried and the next retry.
+
 To obtain the client after the configuration:
 
 ```
@@ -46,7 +60,12 @@ To obtain the client after the configuration:
 
 ###Hydra cache
 
-The Hydra client cache ...
+The Hydra client, in order to reduce the network traffic and improve the overall system performance, cache two resources:
+
++ Hydra servers, the list of available hydra server.
++ Application servers, the list of current server available for an application id.
+
+You can ignore the available applications server cache when use hydra client:
 
 ```
     LinkedHashSet<String> candidateServers = hydraClient.get(applicationId,true);
@@ -54,29 +73,27 @@ The Hydra client cache ...
     //Some network call using the first of the candidate servers.
 ```
 
-This call shortcut the internal cache, requests the candidate servers and refresh the internal cache.
+This call shortcut the application servers internal cache, requests the candidate servers and refresh the internal cache.
 
 ##Advanced configuration
 
-###App cache refresh time
+You can cache all the default configuration values using the following methods.
 
-The time is expressed seconds.
+###App cache refresh time
 
 ```
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerSeed).
-            withAppsTimeOut(10l).
+            withAppsCacheRefreshTime(10l).
         build();
 ```
 
 ###Hydra servers cache refresh time
 
-The time is expressed in seconds.
-
 ```
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerSeed).
-            withHydraTimeOut(90l).
+            withHydraCacheRefreshTime(90l).
         build();
 ```
 
@@ -91,8 +108,6 @@ The time is expressed in seconds.
 
 ###Wait times between retries
 
-The time is expressed in milliseconds
-
 ```
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerSeed).
@@ -101,6 +116,8 @@ The time is expressed in milliseconds
 ```
 
 ###A complex configuration example
+
+You can change all the parameters when configure the client.
 
 ```
     HydraClient hydraClient = HydraClientFactory.
