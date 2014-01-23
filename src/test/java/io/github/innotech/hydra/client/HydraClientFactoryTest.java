@@ -97,7 +97,7 @@ public class HydraClientFactoryTest {
 	public void shouldAddATimerJobForRefreshHydraServersWithTimeOut() throws Exception{
 		hydraClientFactoryTimersFixture();
 		
-		HydraClientFactory.config(TEST_HYDRA_SERVERS).withHydraTimeOut(10l).build();
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).withHydraCacheRefreshTime(10l).build();
 		
 		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
 	}
@@ -106,7 +106,7 @@ public class HydraClientFactoryTest {
 	public void shouldAddATimerJobForRefreshHydraServersAndTimeOut() throws Exception{
 		hydraClientFactoryTimersFixture();
 		
-		HydraClientFactory.config(TEST_HYDRA_SERVERS).andHydraTimeOut(10l).build();
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).andHydraRefreshTime(10l).build();
 		
 		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
 	}
@@ -124,7 +124,7 @@ public class HydraClientFactoryTest {
 	public void shouldAddATimerJobForRefreshAppServersWithTimeOut() throws Exception{
 		hydraClientFactoryTimersFixture();
 		
-		HydraClientFactory.config(TEST_HYDRA_SERVERS).withAppsTimeOut(90l).build();
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).withAppsCacheRefreshTime(90l).build();
 		
 		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
 	}
@@ -133,7 +133,7 @@ public class HydraClientFactoryTest {
 	public void shouldAddATimerJobForRefreshAppServersAndTimeOut() throws Exception{
 		hydraClientFactoryTimersFixture();
 		
-		HydraClientFactory.config(TEST_HYDRA_SERVERS).andAppsTimeOut(90l).build();
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).andAppsCacheRefreshTime(90l).build();
 		
 		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
 	}
@@ -168,12 +168,12 @@ public class HydraClientFactoryTest {
 	
 	@Test(expected=IllegalArgumentException.class) 
 	public void shouldReturnIllegalArgumentExceptionWhenNullAppTimeOut() throws Exception{
-		HydraClientFactory.config(TEST_HYDRA_SERVERS).andAppsTimeOut(null);
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).andAppsCacheRefreshTime(null);
 	}
 	
 	@Test(expected=IllegalArgumentException.class) 
 	public void shouldReturnIllegalArgumentExceptionWhenNullHydraTimeOut() throws Exception{
-		HydraClientFactory.config(TEST_HYDRA_SERVERS).andHydraTimeOut(null);
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).andHydraRefreshTime(null);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)

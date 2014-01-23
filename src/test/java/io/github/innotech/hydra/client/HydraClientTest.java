@@ -23,9 +23,13 @@ public class HydraClientTest {
 
 	private static final String HYDRA = "hydra";
 
-	private static String TEST_HYDRA_SERVER = "http://localhost:8080/hydra-server";
+	private static String TEST_HYDRA_SERVER_URL = "http://localhost:8080";
 	
-	private static String ANOTHER_TEST_HYDRA_SERVER = "http://localhost:8080/another-hydra-server";
+	private static String ANOTHER_TEST_HYDRA_SERVER_URL = "http://localhost:8081";
+	
+	private static String TEST_HYDRA_SERVER = TEST_HYDRA_SERVER_URL + "/app/hydra";
+	
+	private static String ANOTHER_TEST_HYDRA_SERVER = ANOTHER_TEST_HYDRA_SERVER_URL + "app/hydra";
 	
 	private static String TEST_APP_SERVER = "http://localhost:8080/app-server";
 
@@ -56,13 +60,13 @@ public class HydraClientTest {
 	@Test
 	public void shouldReturnTheListOfServers() throws Exception {		
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_APP_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		Set<String> candidateUrls = hydraClient.get(APP_ID);
 
 		assertNotNull("The list of string with the candidate urls", candidateUrls);
-		assertEquals("The list candidate server is not the expected", TEST_HYDRA_SERVERS,candidateUrls);
+		assertEquals("The list candidate server is not the expected", TEST_APP_SERVERS,candidateUrls);
 	}
 	
 	@Test

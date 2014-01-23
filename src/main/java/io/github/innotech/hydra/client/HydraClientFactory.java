@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class HydraClientFactory {
 
+	private static final String HYDRA_CONTEXT_ROOT = "/app/hydra";
+
 	private static final Long DEFAULT_HYDRA_SERVER_REFRESH = TimeUnit.SECONDS.toMillis(60l);
 
 	private static final Long DEFAULT_HYDRA_APPS_REFRESH = TimeUnit.SECONDS.toMillis(20l);
@@ -31,7 +33,7 @@ public class HydraClientFactory {
 
 	private Integer millisecondsToRetry = 0;
 
-	private LinkedHashSet<String> hydraServers;
+	private LinkedHashSet<String> hydraServers = new LinkedHashSet<String>();
 
 	/**
 	 * Default constructor private according the pattern.
@@ -39,8 +41,19 @@ public class HydraClientFactory {
 	private HydraClientFactory() {
 	}
 
-	public static HydraClientFactory config(LinkedHashSet<String> seedHydraServers) {
-		hydraClientFactory.hydraServers = seedHydraServers;
+	public static HydraClientFactory config(LinkedHashSet<String> hydraServerUrls) {
+		if (hydraServerUrls == null){
+			throw new IllegalArgumentException();
+		}
+		
+		if (hydraServerUrls.isEmpty()){
+			throw new IllegalArgumentException();
+		}
+		
+		for (String hydraServerUrl : hydraServerUrls) {
+			hydraClientFactory.hydraServers.add(hydraServerUrl + HYDRA_CONTEXT_ROOT);
+		}
+		
 		return hydraClientFactory;
 	}
 
@@ -49,15 +62,6 @@ public class HydraClientFactory {
 	 * client, refresh the hydra server list querying the seed servers.
 	 */
 	public HydraClient build() {
-
-		if (hydraServers == null) {
-			throw new IllegalArgumentException();
-		}
-
-		if (hydraServers.size() == 0) {
-			throw new IllegalArgumentException();
-		}
-
 		if (hydraClient != null) {
 			return hydraClient;
 		}
@@ -89,7 +93,7 @@ public class HydraClientFactory {
 		hydraClientFactory.hydraClient = null;
 	}
 
-	public HydraClientFactory withHydraTimeOut(Long timeOutSeconds) {
+	public HydraClientFactory withHydraCacheRefreshTime(Long timeOutSeconds) {
 		if (timeOutSeconds == null) {
 			throw new IllegalArgumentException();
 		}
@@ -98,7 +102,7 @@ public class HydraClientFactory {
 		return this;
 	}
 
-	public HydraClientFactory withAppsTimeOut(Long timeOutSeconds) {
+	public HydraClientFactory withAppsCacheRefreshTime(Long timeOutSeconds) {
 
 		if (timeOutSeconds == null) {
 			throw new IllegalArgumentException();
@@ -108,12 +112,12 @@ public class HydraClientFactory {
 		return this;
 	}
 
-	public HydraClientFactory andAppsTimeOut(Long timeOutSeconds) {
-		return withAppsTimeOut(timeOutSeconds);
+	public HydraClientFactory andAppsCacheRefreshTime(Long timeOutSeconds) {
+		return withAppsCacheRefreshTime(timeOutSeconds);
 	}
 
-	public HydraClientFactory andHydraTimeOut(Long timeOutSeconds) {
-		return withHydraTimeOut(timeOutSeconds);
+	public HydraClientFactory andHydraRefreshTime(Long timeOutSeconds) {
+		return withHydraCacheRefreshTime(timeOutSeconds);
 	}
 
 	public HydraClientFactory withNumberOfRetries(int numberOfRetries) {
