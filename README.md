@@ -39,6 +39,13 @@ The basic way to connect to hydra using the java client is:
 
 The config method take only one parameter the hydraServerSeed, this is a LinkedHashSet of String contains the initial urls where hydra client search the hydra server. Once the server is discovered the client automatically refresh the list of the available serves.
 
+```
+    LinkedHashSet<String> hydraServerSeed = new LinkedHashSet<String>();
+    hydraServerSeed.add("http://localhost:8080");
+```
+
+The previous code fragment configure the client to search hydra server in localhost.
+
 In this case the rest of config parameters are configured using the following default values.
 
 ###Configuration parameters
@@ -65,7 +72,7 @@ The Hydra client, in order to reduce the network traffic and improve the overall
 + Hydra servers, the list of available hydra server.
 + Application servers, the list of current server available for an application id.
 
-You can ignore the available applications server cache when use hydra client:
+You can shortcut the available applications server cache when use hydra client:
 
 ```
     LinkedHashSet<String> candidateServers = hydraClient.get(applicationId,true);
