@@ -30,18 +30,18 @@ Take the generated jar in target directory.
 The basic way to connect to hydra using the java client is:
 
 ```
-    HydraClient hydraClient = HydraClientFactory.config(hydraServerSeed).build();
+    HydraClient hydraClient = HydraClientFactory.config(hydraServerUrls).build();
     LinkedHashSet<String> candidateServers = hydraClient.get(applicationId);
   
     //Some network call using the first of the candidate servers.
 
 ```
 
-The config method take only one parameter the hydraServerSeed, this is a LinkedHashSet of String contains the initial urls where hydra client search the hydra server. Once the server is discovered the client automatically refresh the list of the available serves.
+The config method take only one parameter the hydraServerUrls, this is a LinkedHashSet of String contains the initial urls where hydra client search the hydra server. Once the server is discovered the client automatically refresh the list of the available serves.
 
 ```
-    LinkedHashSet<String> hydraServerSeed = new LinkedHashSet<String>();
-    hydraServerSeed.add("http://localhost:8080");
+    LinkedHashSet<String> hydraServerUrls = new LinkedHashSet<String>();
+    hydraServerUrls.add("http://localhost:8080");
 ```
 
 The previous code fragment configure the client to search hydra server in localhost.
@@ -90,7 +90,7 @@ You can cache all the default configuration values using the following methods.
 
 ```
     HydraClient hydraClient = HydraClientFactory.
-            config(hydraServerSeed).
+            config(hydraServerUrls).
             withAppsCacheRefreshTime(10l).
         build();
 ```
@@ -99,7 +99,7 @@ You can cache all the default configuration values using the following methods.
 
 ```
     HydraClient hydraClient = HydraClientFactory.
-            config(hydraServerSeed).
+            config(hydraServerUrls).
             withHydraCacheRefreshTime(90l).
         build();
 ```
@@ -108,7 +108,7 @@ You can cache all the default configuration values using the following methods.
 
 ```
     HydraClient hydraClient = HydraClientFactory.
-            config(hydraServerSeed).
+            config(hydraServerUrls).
             withNumberOfRetries(3).
         build();
 ```
@@ -117,7 +117,7 @@ You can cache all the default configuration values using the following methods.
 
 ```
     HydraClient hydraClient = HydraClientFactory.
-            config(hydraServerSeed).
+            config(hydraServerUrls).
             waitBetweenAllServersRetry(300).
         build();
 ```
@@ -128,7 +128,7 @@ You can change all the parameters when configure the client.
 
 ```
     HydraClient hydraClient = HydraClientFactory.
-            config(hydraServerSeed).
+            config(hydraServerUrls).
             withAppsTimeOut(10l).
             andHydraTimeOut(90l).
             andNumberOfRetries(3).
