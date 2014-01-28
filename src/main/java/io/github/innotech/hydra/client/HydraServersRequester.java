@@ -10,7 +10,7 @@ import java.util.LinkedHashSet;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 class HydraServersRequester {
 
-	private HttpClient httpClient = HttpClientBuilder.create().build();
+	private HttpClient httpClient = new DefaultHttpClient();
 
 	private ObjectMapper mapper = new ObjectMapper();
 
