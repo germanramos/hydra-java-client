@@ -9,6 +9,7 @@ import io.github.innotech.hydra.client.exceptions.NoneServersAccessible;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -65,6 +66,20 @@ public class HydraClientTest {
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		Set<String> candidateUrls = hydraClient.get(APP_ID);
 
+		assertNotNull("The list of string with the candidate urls", candidateUrls);
+		assertEquals("The list candidate server is not the expected", TEST_APP_SERVERS,candidateUrls);
+	}
+	
+	@Test
+	public void shouldReturnTheListOfServersAsync() throws Exception {		
+		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_APP_SERVERS);
+
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		Future<LinkedHashSet<String>> async = hydraClient.getAsync(APP_ID);
+		
+		Set<String> candidateUrls = async.get();
+		
 		assertNotNull("The list of string with the candidate urls", candidateUrls);
 		assertEquals("The list candidate server is not the expected", TEST_APP_SERVERS,candidateUrls);
 	}

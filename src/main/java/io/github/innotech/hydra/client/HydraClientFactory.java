@@ -67,7 +67,6 @@ public class HydraClientFactory {
 		}
 
 		hydraClient = new HydraClient(hydraServers);
-		hydraClient.reloadHydraServers();
 		hydraClient.setMaxNumberOfRetries(numberOfRetries);
 		hydraClient.setWaitBetweenAllServersRetry(millisecondsToRetry);
 
