@@ -10,6 +10,7 @@ import io.github.innotech.hydra.client.exceptions.NoneServersAccessible;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -85,12 +86,13 @@ public class HydraClientTest {
 	}
 	
 	@Test
-	public void shouldReloadHydraServers() throws Exception {		
+	public synchronized void shouldReloadHydraServers() throws Exception {		
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.reloadHydraServers();
-		Thread.yield();
+		
+		wait(1000);
 		
 		verify(hydraServersRequester).getCandidateServers(TEST_HYDRA_SERVER,HYDRA);
 	}
