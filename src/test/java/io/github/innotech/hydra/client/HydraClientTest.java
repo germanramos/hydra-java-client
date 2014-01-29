@@ -90,7 +90,8 @@ public class HydraClientTest {
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.reloadHydraServers();
-
+		Thread.yield();
+		
 		verify(hydraServersRequester).getCandidateServers(TEST_HYDRA_SERVER,HYDRA);
 	}
 	
