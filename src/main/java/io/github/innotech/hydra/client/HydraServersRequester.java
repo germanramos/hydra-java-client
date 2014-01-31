@@ -10,7 +10,13 @@ import java.util.LinkedHashSet;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,27 +27,38 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 class HydraServersRequester {
 
-	private HttpClient httpClient = new DefaultHttpClient();
+	private HttpClient httpClient;
 
 	private ObjectMapper mapper = new ObjectMapper();
 
 	private JavaType type = mapper.getTypeFactory().constructCollectionType(LinkedHashSet.class, String.class);
 
+	public HydraServersRequester() {
+		HttpParams params = new BasicHttpParams();
+		SchemeRegistry registry = new SchemeRegistry();
+		registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+		
+		ThreadSafeClientConnManager threadSafeClientConnManager = new ThreadSafeClientConnManager(params, registry);
+		httpClient = new DefaultHttpClient(threadSafeClientConnManager, params);
+	}
+
 	/**
-	 * Return the candidate url's of the servers sorted by the hydra active algorithm. 
+	 * Return the candidate url's of the servers sorted by the hydra active
+	 * algorithm.
 	 */
 	public LinkedHashSet<String> getCandidateServers(String hydraServerUrl, String appId) throws InaccessibleServer {
 		try {
 			return requestServers(hydraServerUrl, appId);
 		} catch (IOException e) {
-			throw new InaccessibleServer(e);		
+			throw new InaccessibleServer(e);
 		}
 	}
 
-	private LinkedHashSet<String> requestServers(String hydraServerUrl, String appId) throws IOException,InaccessibleServer {
+	private LinkedHashSet<String> requestServers(String hydraServerUrl, String appId) throws IOException,
+			InaccessibleServer {
 		HttpGet httpGet = new HttpGet(hydraServerUrl + "/" + appId);
 		HttpResponse response = httpClient.execute(httpGet);
-		
+
 		if (response.getStatusLine().getStatusCode() != 200) {
 			throw new InaccessibleServer();
 		}

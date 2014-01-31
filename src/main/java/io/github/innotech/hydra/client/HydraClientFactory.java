@@ -9,11 +9,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class HydraClientFactory {
 
-	private static final String HYDRA_CONTEXT_ROOT = "/app/hydra";
-
 	private static final Long DEFAULT_HYDRA_SERVER_REFRESH = TimeUnit.SECONDS.toMillis(60l);
 
 	private static final Long DEFAULT_HYDRA_APPS_REFRESH = TimeUnit.SECONDS.toMillis(20l);
+
+	private static final Integer DEFAULT_RETRIES_NUMBER = 10;
 
 	private static HydraClientFactory hydraClientFactory = new HydraClientFactory();
 
@@ -26,8 +26,6 @@ public class HydraClientFactory {
 	private Timer hydraTimer;
 
 	private Timer appsTimer;
-
-	private static final Integer DEFAULT_RETRIES_NUMBER = 10;
 
 	private Integer numberOfRetries = DEFAULT_RETRIES_NUMBER;
 
@@ -51,7 +49,7 @@ public class HydraClientFactory {
 		}
 		
 		for (String hydraServerUrl : hydraServerUrls) {
-			hydraClientFactory.hydraServers.add(hydraServerUrl + HYDRA_CONTEXT_ROOT);
+			hydraClientFactory.hydraServers.add(hydraServerUrl);
 		}
 		
 		return hydraClientFactory;

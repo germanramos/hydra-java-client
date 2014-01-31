@@ -17,6 +17,26 @@ For a complete information about the project visit http://innotech.github.io/hyd
     </dependency>
 ```
 
+Hydra client depends on:
+
+```
+    <dependency>
+    	<groupId>org.apache.httpcomponents</groupId>
+    	<artifactId>httpclient</artifactId>
+    	<version>4.0</version>
+    </dependency>	
+```
+
+and
+
+```
+    <dependency>
+    	<groupId>com.fasterxml.jackson.core</groupId>
+    	<artifactId>jackson-databind</artifactId>
+    	<version>2.3.1</version>
+    </dependency>
+```
+
 ###From source code 
 
 ```

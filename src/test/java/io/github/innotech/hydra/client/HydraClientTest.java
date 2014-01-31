@@ -2,15 +2,15 @@ package io.github.innotech.hydra.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.*;
-
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
 import io.github.innotech.hydra.client.exceptions.NoneServersAccessible;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,13 +23,15 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PrepareForTest(HydraClient.class)
 public class HydraClientTest {
 
+	private static final String APP_ROOT = "/app";
+
 	private static final String HYDRA = "hydra";
 
 	private static String TEST_HYDRA_SERVER_URL = "http://localhost:8080";
 	
 	private static String ANOTHER_TEST_HYDRA_SERVER_URL = "http://localhost:8081";
 	
-	private static String TEST_HYDRA_SERVER = TEST_HYDRA_SERVER_URL + "/app/hydra";
+	private static String TEST_HYDRA_SERVER = TEST_HYDRA_SERVER_URL;
 	
 	private static String ANOTHER_TEST_HYDRA_SERVER = ANOTHER_TEST_HYDRA_SERVER_URL + "app/hydra";
 	
@@ -62,7 +64,7 @@ public class HydraClientTest {
 	@Test
 	public void shouldReturnTheListOfServers() throws Exception {		
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_APP_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		Set<String> candidateUrls = hydraClient.get(APP_ID);
@@ -74,7 +76,7 @@ public class HydraClientTest {
 	@Test
 	public void shouldReturnTheListOfServersAsync() throws Exception {		
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_APP_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		Future<LinkedHashSet<String>> async = hydraClient.getAsync(APP_ID);
@@ -94,13 +96,13 @@ public class HydraClientTest {
 		
 		wait(1000);
 		
-		verify(hydraServersRequester).getCandidateServers(TEST_HYDRA_SERVER,HYDRA);
+		verify(hydraServersRequester).getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,HYDRA);
 	}
 	
 	@Test
 	public void shouldCallShortcuttingTheCache() throws Exception{
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.get(APP_ID,true);
@@ -108,14 +110,14 @@ public class HydraClientTest {
 		//Call twice to ensure that the second call hit the cache. 
 		hydraClient.get(APP_ID,true);
 		
-		verify(hydraServersRequester,times(2)).getCandidateServers(TEST_HYDRA_SERVER,APP_ID);
+		verify(hydraServersRequester,times(2)).getCandidateServers(TEST_HYDRA_SERVER +APP_ROOT,APP_ID);
 	}
 	
 	@Test
 	public void shouldCallShortcuttingTheCacheTheFirstServerFails() throws Exception{
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenThrow(new InaccessibleServer());
-		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
 		
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		Set<String> candidateUrls = hydraClient.get(APP_ID,true);
@@ -127,8 +129,8 @@ public class HydraClientTest {
 	@Test(expected=NoneServersAccessible.class)
 	public void shouldCallShortcuttingTheCacheTheSecondServerFails() throws Exception{
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID)).thenThrow(new InaccessibleServer());
-		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER,APP_ID)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
 		
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.setMaxNumberOfRetries(1);
@@ -138,7 +140,7 @@ public class HydraClientTest {
 	@Test
 	public void shouldReloadTheAppCache() throws Exception{
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER,APP_ID))
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID))
 			.thenReturn(TEST_HYDRA_SERVERS)
 			.thenReturn(TEST_APP_SERVERS);
 

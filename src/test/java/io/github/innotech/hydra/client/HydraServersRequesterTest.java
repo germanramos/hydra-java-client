@@ -56,7 +56,7 @@ public class HydraServersRequesterTest {
 
 	@Test
 	public void shouldReturnAListOfServers() throws Exception {
-		PowerMockito.whenNew(DefaultHttpClient.class).withNoArguments().thenReturn(defaultHttpClient);
+		PowerMockito.whenNew(DefaultHttpClient.class).withAnyArguments().thenReturn(defaultHttpClient);
 		PowerMockito.whenNew(HttpGet.class).withArguments(TEST_HYDRA_SERVER + "/" + APP_ID).thenReturn(httpGet);
 
 		
@@ -76,7 +76,7 @@ public class HydraServersRequesterTest {
 	
 	@Test(expected=InaccessibleServer.class)
 	public void shouldFailWhenReturnTheServerList() throws Exception {
-		PowerMockito.whenNew(DefaultHttpClient.class).withNoArguments().thenReturn(defaultHttpClient);
+		PowerMockito.whenNew(DefaultHttpClient.class).withAnyArguments().thenReturn(defaultHttpClient);
 		PowerMockito.whenNew(HttpGet.class).withArguments(TEST_HYDRA_SERVER + "/" + APP_ID).thenReturn(httpGet);
 				
 		when(defaultHttpClient.execute(httpGet)).thenReturn(httpResponse);
@@ -89,7 +89,7 @@ public class HydraServersRequesterTest {
 	
 	@Test(expected=InaccessibleServer.class)
 	public void shouldFailWhenExecuteTheRequest() throws Exception {
-		PowerMockito.whenNew(DefaultHttpClient.class).withNoArguments().thenReturn(defaultHttpClient);
+		PowerMockito.whenNew(DefaultHttpClient.class).withAnyArguments().thenReturn(defaultHttpClient);
 		PowerMockito.whenNew(HttpGet.class).withArguments(TEST_HYDRA_SERVER + "/" + APP_ID).thenReturn(httpGet);
 		
 		when(defaultHttpClient.execute(httpGet)).thenThrow(new IOException());

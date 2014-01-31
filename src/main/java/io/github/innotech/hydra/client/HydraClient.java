@@ -25,6 +25,8 @@ public class HydraClient {
 	private HydraServersRequester hydraServerRequester = new HydraServersRequester();
 
 	private final static String HYDRA_APP_ID = "hydra";
+	
+	private final static String APP_ROOT = "/app";
 
 	private LinkedHashSet<String> hydraServers;
 
@@ -214,7 +216,7 @@ public class HydraClient {
 		while (maxNumberOfRetries == 0 || retries < totalNumberOfRetries) {
 			String currentHydraServer = getCurrentHydraServer();
 			try {
-				return hydraServerRequester.getCandidateServers(currentHydraServer, appId);
+				return hydraServerRequester.getCandidateServers(currentHydraServer + APP_ROOT, appId);
 			} catch (InaccessibleServer e) {
 				reorderServers(currentHydraServer);
 				retries++;
