@@ -3,10 +3,13 @@ package io.github.innotech.hydra.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
+import io.github.innotech.hydra.client.HydraServersRequester.DummySSLSocketFactory;
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.util.Set;
 
 import org.apache.http.HttpEntity;
@@ -15,6 +18,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -23,8 +27,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-//@PrepareForTest({HydraServersRequester.class,HttpClientBuilder.class})
-@PrepareForTest({HydraServersRequester.class,DefaultHttpClient.class})
+@PrepareForTest({HydraServersRequester.class,DefaultHttpClient.class,KeyStore.class})
 public class HydraServersRequesterTest {
 
 	@Mock
@@ -45,8 +48,11 @@ public class HydraServersRequesterTest {
 	@Mock
 	private HttpGet httpGet;
 	
-	/*@Mock
-	private HttpClientBuilder httpClientBuilder;*/
+	@Mock
+	private KeyStore keyStore;
+	
+	@Mock
+	private DummySSLSocketFactory dummySSLSocketFactory;
 	
 	private static String TEST_HYDRA_SERVER = "http://localhost:8080/hydra-server";
 	
@@ -54,12 +60,17 @@ public class HydraServersRequesterTest {
 	
 	private static String APP_ID = "testAppId";
 
-	@Test
-	public void shouldReturnAListOfServers() throws Exception {
+	@Before
+	public void configureHttpClient() throws Exception, KeyStoreException {
 		PowerMockito.whenNew(DefaultHttpClient.class).withAnyArguments().thenReturn(defaultHttpClient);
 		PowerMockito.whenNew(HttpGet.class).withArguments(TEST_HYDRA_SERVER + "/" + APP_ID).thenReturn(httpGet);
-
-		
+		PowerMockito.mockStatic(KeyStore.class);
+		when(KeyStore.getInstance(KeyStore.getDefaultType())).thenReturn(keyStore);
+		PowerMockito.whenNew(DummySSLSocketFactory.class).withAnyArguments().thenReturn(dummySSLSocketFactory);
+	}
+	
+	@Test
+	public void shouldReturnAListOfServers() throws Exception {
 		when(defaultHttpClient.execute(httpGet)).thenReturn(httpResponse);
 		when(httpResponse.getStatusLine()).thenReturn(statusLine);
 		when(statusLine.getStatusCode()).thenReturn(200);
@@ -76,9 +87,6 @@ public class HydraServersRequesterTest {
 	
 	@Test(expected=InaccessibleServer.class)
 	public void shouldFailWhenReturnTheServerList() throws Exception {
-		PowerMockito.whenNew(DefaultHttpClient.class).withAnyArguments().thenReturn(defaultHttpClient);
-		PowerMockito.whenNew(HttpGet.class).withArguments(TEST_HYDRA_SERVER + "/" + APP_ID).thenReturn(httpGet);
-				
 		when(defaultHttpClient.execute(httpGet)).thenReturn(httpResponse);
 		when(httpResponse.getStatusLine()).thenReturn(statusLine);
 		when(statusLine.getStatusCode()).thenReturn(400);
@@ -89,12 +97,10 @@ public class HydraServersRequesterTest {
 	
 	@Test(expected=InaccessibleServer.class)
 	public void shouldFailWhenExecuteTheRequest() throws Exception {
-		PowerMockito.whenNew(DefaultHttpClient.class).withAnyArguments().thenReturn(defaultHttpClient);
-		PowerMockito.whenNew(HttpGet.class).withArguments(TEST_HYDRA_SERVER + "/" + APP_ID).thenReturn(httpGet);
-		
 		when(defaultHttpClient.execute(httpGet)).thenThrow(new IOException());
 
 		HydraServersRequester hydraServersRequester = new HydraServersRequester();
 		hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER, APP_ID);
 	}
+	
 }
