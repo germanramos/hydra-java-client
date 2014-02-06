@@ -2,6 +2,7 @@ package io.github.innotech.hydra.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,7 +28,7 @@ public class HydraClientTest {
 
 	private static final String HYDRA = "hydra";
 
-	private static String TEST_HYDRA_SERVER_URL = "http://localhost:8080";
+	private static String TEST_HYDRA_SERVER_URL = "http://localhost:8080/";
 	
 	private static String ANOTHER_TEST_HYDRA_SERVER_URL = "http://localhost:8081";
 	
@@ -36,7 +37,9 @@ public class HydraClientTest {
 	private static String ANOTHER_TEST_HYDRA_SERVER = ANOTHER_TEST_HYDRA_SERVER_URL + "app/hydra";
 	
 	private static String TEST_APP_SERVER = "http://localhost:8080/app-server";
-
+	
+	private static String TEST_APP_SERVER_SECOND = "http://localhost:8080/app-server-second";
+	
 	private static String APP_ID = "testAppId";
 
 	LinkedHashSet <String> TEST_HYDRA_SERVERS = new LinkedHashSet<String>() {
@@ -55,6 +58,7 @@ public class HydraClientTest {
 
 		{
 			this.add(TEST_APP_SERVER);
+			this.add(TEST_APP_SERVER_SECOND);
 		}
 	};
 	
@@ -71,6 +75,41 @@ public class HydraClientTest {
 
 		assertNotNull("The list of string with the candidate urls", candidateUrls);
 		assertEquals("The list candidate server is not the expected", TEST_APP_SERVERS,candidateUrls);
+	}
+	
+	@Test
+	public void shouldRemoveAServerThatFails() throws Exception{
+		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
+
+		HydraClient hydraClient = new HydraClient(TEST_APP_SERVERS);
+		hydraClient.get(APP_ID);
+		
+		//Call twice to ensure that the second call hit the cache. 
+		hydraClient.removeServer(APP_ID,TEST_APP_SERVER_SECOND);
+		Set<String> candidateAfterRemoveUrls = hydraClient.get(APP_ID);
+		
+		assertTrue("The list of string with the candidate urls", !candidateAfterRemoveUrls.contains(TEST_APP_SERVER_SECOND));
+	}
+	
+	@Test
+	public void shouldRemoveAppIfAllServerFails() throws Exception{
+		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
+
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.get(APP_ID);
+		
+		//Call twice to ensure that the second call hit the cache. 
+		hydraClient.get(APP_ID);
+		hydraClient.removeServer(APP_ID,TEST_APP_SERVER_SECOND);
+		hydraClient.removeServer(APP_ID,TEST_APP_SERVER);
+		
+		Set<String> candidateAfterRemoveUrls = hydraClient.get(APP_ID);
+		
+		assertNotNull("The list of string with the candidate urls", candidateAfterRemoveUrls);
+		assertEquals("The list candidate server is not the expected", TEST_APP_SERVERS,candidateAfterRemoveUrls);
+
 	}
 	
 	@Test

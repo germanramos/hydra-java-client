@@ -75,6 +75,25 @@ public class HydraClient {
 	public LinkedHashSet<String> get(String appId) {
 		return get(appId, false);
 	}
+	
+	/**
+	 * Remove a server from a application, this method was called normally if the server fails. 
+	 */
+	public void removeServer(String appId,String server) {
+		WriteLock writeLock = readWriteLock.writeLock();
+		try {
+			writeLock.lock();
+			LinkedHashSet<String> appServers = appServersCache.get(appId);
+			appServers.remove(server);
+			
+			if (appServers.isEmpty()){
+				appServersCache.remove(appId);
+			}
+			
+		} finally {
+			writeLock.unlock();
+		}
+	}
 
 	/**
 	 * Retrieve a list of servers sorted by hydra available for a concrete
