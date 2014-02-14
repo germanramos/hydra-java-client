@@ -1,6 +1,9 @@
 package io.github.innotech.hydra.client.balancing;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.when;
 import io.github.innotech.hydra.client.balancing.policies.BalancingPolicyExecutor;
 import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicyExecutor;
 import io.github.innotech.hydra.client.balancing.policies.NearestPolicyExecutor;
@@ -9,12 +12,8 @@ import io.github.innotech.hydra.client.balancing.utils.ping.PingClient;
 import java.util.LinkedHashSet;
 import java.util.concurrent.Future;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import static org.mockito.Mockito.*;
-
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
