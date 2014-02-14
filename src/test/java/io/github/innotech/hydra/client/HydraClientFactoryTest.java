@@ -3,12 +3,14 @@ package io.github.innotech.hydra.client;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.verify;
+import io.github.innotech.hydra.client.balancing.policies.BalancingPolicyExecutor;
 
 import java.util.LinkedHashSet;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -46,15 +48,35 @@ public class HydraClientFactoryTest {
 	@Mock
 	private HydraServersMonitor hydraServersMonitor;
 	
+	@Mock
+	private BalancingPolicyExecutor policyExecutor;
+	
 	@After
-	public void reset(){
+	public void resetMock(){
 		HydraClientFactory.reset();
 	}
 
+	@Before
+	public void before() throws Exception{
+		hydraClientFactoryTimersFixture();
+	}
+	
+	@Test
+	public void shouldSetTheClientSideBalancingPolicyWithMethod() throws Exception {
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).withBalancingPolicy(policyExecutor).build();
+
+		verify(hydraClient).setBalancingPolicy(policyExecutor);
+	}
+	
+	@Test
+	public void shouldSetTheClientSideBalancingPolicyAndMethod() throws Exception {
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).andBalancingPolicy(policyExecutor).build();
+
+		verify(hydraClient).setBalancingPolicy(policyExecutor);
+	}
+	
 	@Test
 	public void shouldGetHydraUniqueClient() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClient hydraClient =  HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
 		HydraClient otherHydraClient = HydraClientFactory.hydraClient();
 		
@@ -65,8 +87,6 @@ public class HydraClientFactoryTest {
 	
 	@Test
 	public void shouldGetHydraUniqueClientWhenCallConfigManyTimes() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClient hydraClient = HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
 		HydraClient otherHydraClient =  HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
 		
@@ -77,8 +97,6 @@ public class HydraClientFactoryTest {
 	
 	@Test
 	public void shouldCallToRefreshHydraServerMethods() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
 
 		verify(hydraClient).reloadHydraServers();
@@ -86,8 +104,6 @@ public class HydraClientFactoryTest {
 	
 	@Test 
 	public void shouldAddATimerJobForRefreshHydraServersDefaultTimeOut() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
 		
 		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(60));
@@ -95,8 +111,6 @@ public class HydraClientFactoryTest {
 	
 	@Test 
 	public void shouldAddATimerJobForRefreshHydraServersWithTimeOut() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).withHydraCacheRefreshTime(10l).build();
 		
 		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
@@ -104,8 +118,6 @@ public class HydraClientFactoryTest {
 
 	@Test 
 	public void shouldAddATimerJobForRefreshHydraServersAndTimeOut() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).andHydraRefreshTime(10l).build();
 		
 		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
@@ -122,8 +134,6 @@ public class HydraClientFactoryTest {
 	
 	@Test 
 	public void shouldAddATimerJobForRefreshAppServersWithTimeOut() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).withAppsCacheRefreshTime(90l).build();
 		
 		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
@@ -131,8 +141,6 @@ public class HydraClientFactoryTest {
 	
 	@Test 
 	public void shouldAddATimerJobForRefreshAppServersAndTimeOut() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).andAppsCacheRefreshTime(90l).build();
 		
 		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
@@ -140,8 +148,6 @@ public class HydraClientFactoryTest {
 	
 	@Test 
 	public void shouldAddNumberOfRetries() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).withNumberOfRetries(30).build();
 		
 		verify(hydraClient).setMaxNumberOfRetries(30);
@@ -150,8 +156,6 @@ public class HydraClientFactoryTest {
 	
 	@Test 
 	public void shouldAddNumberOfRetriesAnd() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).andNumberOfRetries(30).build();
 		
 		verify(hydraClient).setMaxNumberOfRetries(30);
@@ -159,8 +163,6 @@ public class HydraClientFactoryTest {
 	
 	@Test
 	public void shouldSetTheNumberOfMillisecondAllServerCallRetry() throws Exception{
-		hydraClientFactoryTimersFixture();
-		
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).waitBetweenAllServersRetry(30).build();
 		
 		verify(hydraClient).setWaitBetweenAllServersRetry(30);

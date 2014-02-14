@@ -7,7 +7,7 @@ import static org.junit.Assert.*;
  * Test hydra client against a mock configured in port 5000 with lucius.public.database app.
  *
  */
-public class HydraTest {
+public class HydraIntegratedTest {
 
 	public static void main(String[] args) {
 		LinkedHashSet<String> hydraSeed = new LinkedHashSet<String>();

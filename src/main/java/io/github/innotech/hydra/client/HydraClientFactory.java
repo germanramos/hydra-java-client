@@ -1,5 +1,8 @@
 package io.github.innotech.hydra.client;
 
+import io.github.innotech.hydra.client.balancing.policies.BalancingPolicyExecutor;
+import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicyExecutor;
+
 import java.util.LinkedHashSet;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +35,8 @@ public class HydraClientFactory {
 	private Integer millisecondsToRetry = 0;
 
 	private LinkedHashSet<String> hydraServers = new LinkedHashSet<String>();
+	
+	private BalancingPolicyExecutor policy = new DelegatedPolicyExecutor();
 
 	/**
 	 * Default constructor private according the pattern.
@@ -39,7 +44,7 @@ public class HydraClientFactory {
 	private HydraClientFactory() {
 	}
 
-	public static HydraClientFactory config(LinkedHashSet<String> hydraServerUrls) {
+	public static HydraClientFactory  config(LinkedHashSet<String> hydraServerUrls) {
 		if (hydraServerUrls == null){
 			throw new IllegalArgumentException();
 		}
@@ -63,10 +68,11 @@ public class HydraClientFactory {
 		if (hydraClient != null) {
 			return hydraClient;
 		}
-
+		
 		hydraClient = new HydraClient(hydraServers);
 		hydraClient.setMaxNumberOfRetries(numberOfRetries);
 		hydraClient.setWaitBetweenAllServersRetry(millisecondsToRetry);
+		hydraClient.setBalancingPolicy(policy);
 		hydraClient.reloadHydraServers();
 		
 		configureCacheRefreshTimers();
@@ -89,6 +95,7 @@ public class HydraClientFactory {
 	// Method that reset the client this methods is needed only for tests.
 	static void reset() {
 		hydraClientFactory.hydraClient = null;
+		hydraClientFactory.policy = new DelegatedPolicyExecutor();
 	}
 
 	public HydraClientFactory withHydraCacheRefreshTime(Long timeOutSeconds) {
@@ -130,6 +137,15 @@ public class HydraClientFactory {
 	public HydraClientFactory waitBetweenAllServersRetry(int millisecondsToRetry) {
 		this.millisecondsToRetry = millisecondsToRetry;
 		return this;
+	}
+
+	public HydraClientFactory withBalancingPolicy(BalancingPolicyExecutor policyExecutor) {
+		this.policy = policyExecutor;
+		return this;		
+	}
+
+	public HydraClientFactory andBalancingPolicy(BalancingPolicyExecutor policyExecutor) {
+		return withBalancingPolicy(policyExecutor);
 	}
 
 	private HydraClient getHydraClient() {

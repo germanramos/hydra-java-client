@@ -1,5 +1,7 @@
 package io.github.innotech.hydra.client;
 
+import io.github.innotech.hydra.client.balancing.policies.BalancingPolicyExecutor;
+import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicyExecutor;
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
 import io.github.innotech.hydra.client.exceptions.NoneServersAccessible;
 
@@ -41,6 +43,8 @@ public class HydraClient {
 	private Integer waitBetweenAllServersRetry = 0;
 
 	private ExecutorService executor = Executors.newFixedThreadPool(3);
+	
+	private BalancingPolicyExecutor policy = new DelegatedPolicyExecutor();
 
 	/**
 	 * The constructor have default visibility because only the factory can
@@ -164,6 +168,7 @@ public class HydraClient {
 			@Override
 			public void run() {
 				LinkedHashSet<String> newHydraServers = requestCandidateServers(HYDRA_APP_ID);
+				
 				WriteLock writeLock = hydraServersReadWriteLock.writeLock();
 				try {
 					writeLock.lock();
@@ -235,7 +240,8 @@ public class HydraClient {
 		while (maxNumberOfRetries == 0 || retries < totalNumberOfRetries) {
 			String currentHydraServer = getCurrentHydraServer();
 			try {
-				return hydraServerRequester.getCandidateServers(currentHydraServer + APP_ROOT, appId);
+				return policy.balance(hydraServerRequester.getCandidateServers(currentHydraServer + APP_ROOT, appId));
+				
 			} catch (InaccessibleServer e) {
 				reorderServers(currentHydraServer);
 				retries++;
@@ -292,5 +298,9 @@ public class HydraClient {
 	 */
 	void setWaitBetweenAllServersRetry(int millisecondsToRetry) {
 		this.waitBetweenAllServersRetry = millisecondsToRetry;
+	}
+
+	void setBalancingPolicy(BalancingPolicyExecutor policy) {
+		this.policy = policy;
 	}
 }
