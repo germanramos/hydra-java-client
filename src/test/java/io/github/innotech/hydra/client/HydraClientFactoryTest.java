@@ -105,45 +105,57 @@ public class HydraClientFactoryTest {
 	}
 	
 	@Test 
-	public void shouldAddATimerJobForRefreshHydraServersDefaultTimeOut() throws Exception{
+	public synchronized void shouldAddATimerJobForRefreshHydraServersDefaultTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
+		
+		wait(1000);
 		
 		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(60));
 	}
 	
 	@Test 
-	public void shouldAddATimerJobForRefreshHydraServersWithTimeOut() throws Exception{
+	public synchronized void shouldAddATimerJobForRefreshHydraServersWithTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).withHydraCacheRefreshTime(10l).build();
+		
+		wait(1000);
 		
 		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
 	}
 
 	@Test 
-	public void shouldAddATimerJobForRefreshHydraServersAndTimeOut() throws Exception{
+	public synchronized void shouldAddATimerJobForRefreshHydraServersAndTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).andHydraRefreshTime(10l).build();
+		
+		wait(1000);
 		
 		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
 	}
 	
 	@Test 
-	public void shouldAddATimerJobForRefreshAppServersDefaultTimeOut() throws Exception{
+	public synchronized void shouldAddATimerJobForRefreshAppServersDefaultTimeOut() throws Exception{
 		hydraClientFactoryTimersFixture();
 		
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
+		
+		wait(1000);
 		
 		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(20));
 	}
 	
 	@Test 
-	public void shouldAddATimerJobForRefreshAppServersWithTimeOut() throws Exception{
+	public synchronized void shouldAddATimerJobForRefreshAppServersWithTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).withAppsCacheRefreshTime(90l).build();
+		
+		wait(1000);
 		
 		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
 	}
 	
 	@Test 
-	public void shouldAddATimerJobForRefreshAppServersAndTimeOut() throws Exception{
+	public synchronized void shouldAddATimerJobForRefreshAppServersAndTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).andAppsCacheRefreshTime(90l).build();
+		
+		wait(1000);
 		
 		verify(appTimer).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
 	}
@@ -195,7 +207,5 @@ public class HydraClientFactoryTest {
 		PowerMockito.whenNew(HydraAppCacheMonitor.class).withAnyArguments().thenReturn(hydraClientCacheMonitor);
 		PowerMockito.whenNew(HydraServersMonitor.class).withAnyArguments().thenReturn(hydraServersMonitor);
 		PowerMockito.whenNew(HydraClient.class).withAnyArguments().thenReturn(hydraClient);
-		PowerMockito.whenNew(DelegatedPolicyExecutor.class).withNoArguments().thenReturn(policyExecutor);
-		when(policyExecutor.balance(TEST_HYDRA_SERVERS)).thenReturn(TEST_HYDRA_SERVERS);
 	}
 }
