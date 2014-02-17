@@ -96,6 +96,8 @@ public class HydraClientFactory {
 	static void reset() {
 		hydraClientFactory.hydraClient = null;
 		hydraClientFactory.policy = new DelegatedPolicyExecutor();
+		hydraClientFactory.hydraServerRefreshTime = DEFAULT_HYDRA_SERVER_REFRESH;
+		hydraClientFactory.hydraAppsRefreshTime = DEFAULT_HYDRA_APPS_REFRESH;
 	}
 
 	public HydraClientFactory withHydraCacheRefreshTime(Long timeOutSeconds) {
