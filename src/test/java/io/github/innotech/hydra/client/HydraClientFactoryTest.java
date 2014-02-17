@@ -105,8 +105,7 @@ public class HydraClientFactoryTest {
 		verify(hydraClient).reloadHydraServers();
 	}
 	
-	@Test
-	@Ignore
+	@Test 
 	public void shouldAddATimerJobForRefreshHydraServersDefaultTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
 		
@@ -127,7 +126,8 @@ public class HydraClientFactoryTest {
 		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
 	}
 	
-	@Test 
+	@Test
+	@Ignore
 	public void shouldAddATimerJobForRefreshAppServersDefaultTimeOut() throws Exception{
 		hydraClientFactoryTimersFixture();
 		
