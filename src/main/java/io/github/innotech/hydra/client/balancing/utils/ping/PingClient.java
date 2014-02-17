@@ -24,7 +24,8 @@ public class PingClient {
 				new Callable<Double>() {
 
 					@Override
-					public Double call() throws IOException, InterruptedException, UnknownHostException  {
+					public Double call() throws IOException,
+							InterruptedException, UnknownHostException {
 						return ping(host);
 					}
 				});
@@ -34,7 +35,8 @@ public class PingClient {
 		return futureTask;
 	}
 
-	Double ping(String host) throws IOException, InterruptedException, UnknownHostException {
+	Double ping(String host) throws IOException, InterruptedException,
+			UnknownHostException {
 		Process process = null;
 		try {
 			String command = "ping -c 1 -w 1 " + host;
@@ -57,7 +59,8 @@ public class PingClient {
 		}
 	}
 
-	Double processResult(InputStream stream) throws NumberFormatException, IOException {
+	Double processResult(InputStream stream) throws NumberFormatException,
+			IOException {
 		BufferedReader buffer = new BufferedReader(
 				new InputStreamReader(stream));
 
@@ -65,7 +68,7 @@ public class PingClient {
 		Double latency = 0.0;
 		Integer pingLines = 0;
 		while ((result = buffer.readLine()) != null) {
-			Pattern pattern = Pattern.compile(".*time=(\\d+\\.\\d+).*");
+			Pattern pattern = Pattern.compile(".*time=(\\d+\\.?\\d+).*");
 			Matcher matcher = pattern.matcher(result);
 
 			if (matcher.matches()) {
