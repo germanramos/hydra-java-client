@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -104,7 +105,8 @@ public class HydraClientFactoryTest {
 		verify(hydraClient).reloadHydraServers();
 	}
 	
-	@Test 
+	@Test
+	@Ignore
 	public void shouldAddATimerJobForRefreshHydraServersDefaultTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
 		
