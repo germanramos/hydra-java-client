@@ -3,7 +3,9 @@ package io.github.innotech.hydra.client;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import io.github.innotech.hydra.client.balancing.policies.BalancingPolicyExecutor;
+import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicyExecutor;
 
 import java.util.LinkedHashSet;
 import java.util.Timer;
@@ -49,7 +51,7 @@ public class HydraClientFactoryTest {
 	private HydraServersMonitor hydraServersMonitor;
 	
 	@Mock
-	private BalancingPolicyExecutor policyExecutor;
+	private DelegatedPolicyExecutor policyExecutor;
 	
 	@After
 	public void resetMock(){
@@ -193,5 +195,7 @@ public class HydraClientFactoryTest {
 		PowerMockito.whenNew(HydraAppCacheMonitor.class).withAnyArguments().thenReturn(hydraClientCacheMonitor);
 		PowerMockito.whenNew(HydraServersMonitor.class).withAnyArguments().thenReturn(hydraServersMonitor);
 		PowerMockito.whenNew(HydraClient.class).withAnyArguments().thenReturn(hydraClient);
+		PowerMockito.whenNew(DelegatedPolicyExecutor.class).withNoArguments().thenReturn(policyExecutor);
+		when(policyExecutor.balance(TEST_HYDRA_SERVERS)).thenReturn(TEST_HYDRA_SERVERS);
 	}
 }
