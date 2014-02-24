@@ -2,7 +2,7 @@ package io.github.innotech.hydra.client;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicy;
 
 import java.util.LinkedHashSet;
@@ -139,6 +139,35 @@ public class HydraClientFactoryTest {
 	}
 	
 	@Test 
+	public void shouldAddATimerJobForRefreshAppServersWithoutTimeOut() throws Exception{
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).withoutAppsRefresh().build();
+		
+		verify(appTimer,times(0)).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
+	}
+	
+	@Test 
+	public void shouldAddATimerJobForRefreshHydraServersWithoutTimeOut() throws Exception{
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).withoutHydraServerRefresh().build();
+		
+		verify(timer,times(0)).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
+	}
+	
+	@Test 
+	public void shouldAddATimerJobForRefreshAppServersAndWithoutTimeOut() throws Exception{
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).andWithoutAppsRefresh().build();
+		
+		verify(appTimer,times(0)).schedule(hydraClientCacheMonitor, 0, TimeUnit.SECONDS.toMillis(90));
+	}
+	
+	@Test 
+	public void shouldAddATimerJobForRefreshHydraServersAndWithoutTimeOut() throws Exception{
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).andWithoutHydraServerRefresh().build();
+		
+		verify(timer,times(0)).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
+	}
+	
+	
+	@Test 
 	public void shouldAddATimerJobForRefreshAppServersAndTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).andAppsCacheRefreshTime(90l).build();
 		
@@ -150,7 +179,6 @@ public class HydraClientFactoryTest {
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).withNumberOfRetries(30).build();
 		
 		verify(hydraClient).setMaxNumberOfRetries(30);
-		
 	}
 	
 	@Test 

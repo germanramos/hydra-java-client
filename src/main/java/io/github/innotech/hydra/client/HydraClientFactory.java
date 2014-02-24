@@ -38,6 +38,10 @@ public class HydraClientFactory {
 	
 	private BalancingPolicy policy = new DelegatedPolicy();
 
+	private boolean enableAppRefresh = true;
+	
+	private boolean enableHydraRefresh = true;
+	
 	/**
 	 * Default constructor private according the pattern.
 	 */
@@ -84,10 +88,15 @@ public class HydraClientFactory {
 		hydraTimer = new Timer(true);
 		appsTimer = new Timer(true);
 
-		hydraTimer.schedule(new HydraServersMonitor(hydraClient), 0, hydraServerRefreshTime);
-		appsTimer.schedule(new HydraAppCacheMonitor(hydraClient), 0, hydraAppsRefreshTime);
+		if (enableHydraRefresh == true){
+			hydraTimer.schedule(new HydraServersMonitor(hydraClient), 0, hydraServerRefreshTime);
+		}
+		
+		if (enableAppRefresh == true){
+			appsTimer.schedule(new HydraAppCacheMonitor(hydraClient), 0, hydraAppsRefreshTime);
+		}
 	}
-
+	
 	public static HydraClient hydraClient() {
 		return hydraClientFactory.getHydraClient();
 	}
@@ -98,6 +107,8 @@ public class HydraClientFactory {
 		hydraClientFactory.policy = new DelegatedPolicy();
 		hydraClientFactory.hydraServerRefreshTime = DEFAULT_HYDRA_SERVER_REFRESH;
 		hydraClientFactory.hydraAppsRefreshTime = DEFAULT_HYDRA_APPS_REFRESH;
+		hydraClientFactory.enableAppRefresh = true;
+		hydraClientFactory.enableHydraRefresh = true;
 	}
 
 	public HydraClientFactory withHydraCacheRefreshTime(Long timeOutSeconds) {
@@ -154,4 +165,21 @@ public class HydraClientFactory {
 		return hydraClient;
 	}
 
+	public HydraClientFactory withoutAppsRefresh() {
+		enableAppRefresh = false;
+		return this;
+	}
+
+	public HydraClientFactory withoutHydraServerRefresh() {
+		enableHydraRefresh = false;
+		return this;
+	}
+
+	public HydraClientFactory andWithoutHydraServerRefresh() {
+		return withoutHydraServerRefresh();
+	}
+
+	public HydraClientFactory andWithoutAppsRefresh() {
+		return withoutAppsRefresh();
+	}
 }
