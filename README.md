@@ -143,6 +143,26 @@ You can cache all the default configuration values using the following methods.
         build();
 ```
 
+###Disable the hydra server refresh timer
+
+```
+    HydraClient hydraClient = HydraClientFactory.
+            config(hydraServerUrls).
+            withoutHydraServerRefresh().
+        build();
+```
+
+
+###Disable the app server refresh timer
+
+```
+    HydraClient hydraClient = HydraClientFactory.
+            config(hydraServerUrls).
+            withoutAppsRefresh().
+        build();
+```
+
+
 ###A complex configuration example
 
 You can change all the parameters when configure the client.
@@ -152,6 +172,18 @@ You can change all the parameters when configure the client.
             config(hydraServerUrls).
             withAppsTimeOut(10l).
             andHydraTimeOut(90l).
+            andNumberOfRetries(3).
+            waitBetweenAllServersRetry(300).
+        build();
+```
+
+Other example disable all timers
+
+```
+    HydraClient hydraClient = HydraClientFactory.
+            config(hydraServerUrls).
+            withoutAppsRefresh().
+            andWithoutHydraServerRefresh().
             andNumberOfRetries(3).
             waitBetweenAllServersRetry(300).
         build();

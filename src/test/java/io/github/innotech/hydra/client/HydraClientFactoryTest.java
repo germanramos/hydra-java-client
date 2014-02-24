@@ -166,7 +166,6 @@ public class HydraClientFactoryTest {
 		verify(timer,times(0)).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(10));
 	}
 	
-	
 	@Test 
 	public void shouldAddATimerJobForRefreshAppServersAndTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).andAppsCacheRefreshTime(90l).build();
