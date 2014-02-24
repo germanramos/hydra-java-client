@@ -50,7 +50,7 @@ Take the generated jar in target directory.
 
 The basic way to connect to hydra using the java client is:
 
-```
+```java
     HydraClient hydraClient = HydraClientFactory.config(hydraServerUrls).build();
     LinkedHashSet<String> candidateServers = hydraClient.get(applicationId);
   
@@ -60,7 +60,7 @@ The basic way to connect to hydra using the java client is:
 
 The config method take only one parameter the hydraServerUrls, this is a LinkedHashSet of String contains the initial urls where hydra client search the hydra server. Once the server is discovered the client automatically refresh the list of the available serves.
 
-```
+```java
     LinkedHashSet<String> hydraServerUrls = new LinkedHashSet<String>();
     hydraServerUrls.add("http://localhost:8080");
 ```
@@ -76,10 +76,11 @@ AppsCacheRefreshTime | 60 seconds | The time period that the cache that store th
 HydraCacheRefreshTime| 20 seconds | The time period that the cache that store the hydra servers is invalidated.
 NumberOfRetries| 10 | The client try this number of times to connect to all the register hydra servers.
 WaitBetweenAllServersRetry| 300 milliseconds | The time between all hydra servers are tried and the next retry.
+BalancingPolicyExecutor|  Delegated | Client-side balancing policy to use. By default none is used. Available Delegated or Nearest
 
 To obtain the client after the configuration:
 
-```
+```java
     HydraClient hydraClient = HydraClientFactory.hydraClient();
     LinkedHashSet<String> candidateServers = hydraClient.get(applicationId);
   
@@ -95,7 +96,7 @@ The Hydra client, in order to reduce the network traffic and improve the overall
 
 You can shortcut the available applications server cache when use hydra client:
 
-```
+```java
     LinkedHashSet<String> candidateServers = hydraClient.get(applicationId,true);
   
     //Some network call using the first of the candidate servers.
@@ -109,7 +110,7 @@ You can cache all the default configuration values using the following methods.
 
 ###App cache refresh time
 
-```
+```java
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerUrls).
             withAppsCacheRefreshTime(10l).
@@ -118,7 +119,7 @@ You can cache all the default configuration values using the following methods.
 
 ###Hydra servers cache refresh time
 
-```
+```java
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerUrls).
             withHydraCacheRefreshTime(90l).
@@ -127,7 +128,7 @@ You can cache all the default configuration values using the following methods.
 
 ###Hydra servers number of retries
 
-```
+```java
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerUrls).
             withNumberOfRetries(3).
@@ -136,7 +137,7 @@ You can cache all the default configuration values using the following methods.
 
 ###Wait times between retries
 
-```
+```java
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerUrls).
             waitBetweenAllServersRetry(300).
@@ -145,7 +146,7 @@ You can cache all the default configuration values using the following methods.
 
 ###Disable the hydra server refresh timer
 
-```
+```java
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerUrls).
             withoutHydraServerRefresh().
@@ -155,7 +156,7 @@ You can cache all the default configuration values using the following methods.
 
 ###Disable the app server refresh timer
 
-```
+```java
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerUrls).
             withoutAppsRefresh().
@@ -167,7 +168,7 @@ You can cache all the default configuration values using the following methods.
 
 You can change all the parameters when configure the client.
 
-```
+```java
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerUrls).
             withAppsTimeOut(10l).
@@ -179,12 +180,35 @@ You can change all the parameters when configure the client.
 
 Other example disable all timers
 
-```
+```java
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerUrls).
             withoutAppsRefresh().
             andWithoutHydraServerRefresh().
             andNumberOfRetries(3).
             waitBetweenAllServersRetry(300).
+        build();
+```
+
+## Experimental: Client Side Balancing Policies
+
+Exists two client-side balancing policies:
+* Delegated: Servers are returned in the same order as they are returned from Hydra.
+* Nearest: The client sorts the servers by latency executing a ping against each server url returned. If a server does not respond (timeout, blocked icmp) it's assignated high latency. If the host does not exists, it's removed from the list.
+
+This feature is still experimental. The default policiy is Delegated and it's not needed to specify it.
+
+```java
+    HydraClient hydraClient = HydraClientFactory.
+            config(hydraServerUrls).
+            withBalancingPolicy(new NearestPolicyExecutor()).
+        build();
+```
+
+```java
+    HydraClient hydraClient = HydraClientFactory.
+            config(hydraServerUrls).
+            withAppsTimeOut(10l).
+            andBalancingPolicy(new NearestPolicyExecutor()).
         build();
 ```
