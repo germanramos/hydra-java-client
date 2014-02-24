@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicyExecutor;
+import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicy;
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
 import io.github.innotech.hydra.client.exceptions.NoneServersAccessible;
 
@@ -70,12 +70,12 @@ public class HydraClientTest {
 	private HydraServersRequester hydraServersRequester;
 	
 	@Mock
-	private DelegatedPolicyExecutor delegatedPolicyExecutor;
+	private DelegatedPolicy delegatedPolicyExecutor;
 
 	@Before
 	public void setup() throws Exception{
 		PowerMockito.whenNew(HydraServersRequester.class).withNoArguments().thenReturn(hydraServersRequester);
-		PowerMockito.whenNew(DelegatedPolicyExecutor.class).withNoArguments().thenReturn(delegatedPolicyExecutor);
+		PowerMockito.whenNew(DelegatedPolicy.class).withNoArguments().thenReturn(delegatedPolicyExecutor);
 		when(delegatedPolicyExecutor.balance(TEST_APP_SERVERS)).thenReturn(TEST_APP_SERVERS);
 		when(delegatedPolicyExecutor.balance(TEST_HYDRA_SERVERS)).thenReturn(TEST_HYDRA_SERVERS);
 	}

@@ -1,6 +1,6 @@
-package io.github.innotech.hydra.client.balancing.utils.ping;
+package io.github.innotech.hydra.client.balancing.ping;
 
-import io.github.innotech.hydra.client.balancing.utils.ping.exception.UnknownHostException;
+import io.github.innotech.hydra.client.balancing.ping.exceptions.UnknownHostException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,7 +16,10 @@ import java.util.regex.Pattern;
 
 public class PingClient {
 
+	private static final String PING_COMMAND = "ping -c 1 -w 1 ";
+
 	private static final Double HIGH_LATENCY_OR_UNREACHABLE = 1000.0;
+	
 	private ExecutorService executor = Executors.newFixedThreadPool(3);
 
 	public Future<Double> getLatency(final String host) {
@@ -24,8 +27,7 @@ public class PingClient {
 				new Callable<Double>() {
 
 					@Override
-					public Double call() throws IOException,
-							InterruptedException, UnknownHostException {
+					public Double call() throws IOException,UnknownHostException {
 						return ping(host);
 					}
 				});
@@ -35,34 +37,33 @@ public class PingClient {
 		return futureTask;
 	}
 
-	Double ping(String host) throws IOException, InterruptedException,
-			UnknownHostException {
+	private Double ping(String host) throws IOException,UnknownHostException {
 		Process process = null;
 		try {
-			String command = "ping -c 1 -w 1 " + host;
-
-			process = Runtime.getRuntime().exec(command);
+			process = Runtime.getRuntime().exec(PING_COMMAND + host);
 			process.waitFor();
 
 			switch (process.exitValue()) {
-			case 0:
-				return processResult(process.getInputStream());
-			case 1:
-				return HIGH_LATENCY_OR_UNREACHABLE;
-			default:
-				throw new UnknownHostException();
+				case 0:
+					return processResult(process.getInputStream());
+				case 1:
+					return HIGH_LATENCY_OR_UNREACHABLE;
+				default:
+					throw new UnknownHostException();
 			}
-		} finally {
+		} catch(InterruptedException e){
+			throw new IllegalStateException("Thread interrupted.",e);
+		} 
+		
+		finally {
 			if (process != null) {
 				process.destroy();
 			}
 		}
 	}
 
-	Double processResult(InputStream stream) throws NumberFormatException,
-			IOException {
-		BufferedReader buffer = new BufferedReader(
-				new InputStreamReader(stream));
+	private Double processResult(InputStream stream) throws NumberFormatException,IOException {
+		BufferedReader buffer = new BufferedReader(new InputStreamReader(stream));
 
 		String result = null;
 		Double latency = 0.0;
@@ -80,5 +81,4 @@ public class PingClient {
 		buffer.close();
 		return latency / pingLines;
 	}
-
 }

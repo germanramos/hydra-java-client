@@ -1,6 +1,8 @@
-package io.github.innotech.hydra.client.balancing.utils.ping;
+package io.github.innotech.hydra.client.balancing.ping;
 
 import static org.mockito.Mockito.when;
+
+import io.github.innotech.hydra.client.balancing.ping.PingClient;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

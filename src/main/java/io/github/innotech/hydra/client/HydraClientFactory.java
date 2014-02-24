@@ -1,7 +1,7 @@
 package io.github.innotech.hydra.client;
 
-import io.github.innotech.hydra.client.balancing.policies.BalancingPolicyExecutor;
-import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicyExecutor;
+import io.github.innotech.hydra.client.balancing.policies.BalancingPolicy;
+import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicy;
 
 import java.util.LinkedHashSet;
 import java.util.Timer;
@@ -36,7 +36,7 @@ public class HydraClientFactory {
 
 	private LinkedHashSet<String> hydraServers = new LinkedHashSet<String>();
 	
-	private BalancingPolicyExecutor policy = new DelegatedPolicyExecutor();
+	private BalancingPolicy policy = new DelegatedPolicy();
 
 	/**
 	 * Default constructor private according the pattern.
@@ -95,7 +95,7 @@ public class HydraClientFactory {
 	// Method that reset the client this methods is needed only for tests.
 	static void reset() {
 		hydraClientFactory.hydraClient = null;
-		hydraClientFactory.policy = new DelegatedPolicyExecutor();
+		hydraClientFactory.policy = new DelegatedPolicy();
 		hydraClientFactory.hydraServerRefreshTime = DEFAULT_HYDRA_SERVER_REFRESH;
 		hydraClientFactory.hydraAppsRefreshTime = DEFAULT_HYDRA_APPS_REFRESH;
 	}
@@ -141,12 +141,12 @@ public class HydraClientFactory {
 		return this;
 	}
 
-	public HydraClientFactory withBalancingPolicy(BalancingPolicyExecutor policyExecutor) {
+	public HydraClientFactory withBalancingPolicy(BalancingPolicy policyExecutor) {
 		this.policy = policyExecutor;
 		return this;		
 	}
 
-	public HydraClientFactory andBalancingPolicy(BalancingPolicyExecutor policyExecutor) {
+	public HydraClientFactory andBalancingPolicy(BalancingPolicy policyExecutor) {
 		return withBalancingPolicy(policyExecutor);
 	}
 

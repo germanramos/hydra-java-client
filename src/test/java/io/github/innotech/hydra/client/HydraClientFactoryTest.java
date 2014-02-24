@@ -3,9 +3,7 @@ package io.github.innotech.hydra.client;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import io.github.innotech.hydra.client.balancing.policies.BalancingPolicyExecutor;
-import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicyExecutor;
+import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicy;
 
 import java.util.LinkedHashSet;
 import java.util.Timer;
@@ -13,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -52,7 +49,7 @@ public class HydraClientFactoryTest {
 	private HydraServersMonitor hydraServersMonitor;
 	
 	@Mock
-	private DelegatedPolicyExecutor policyExecutor;
+	private DelegatedPolicy policyExecutor;
 	
 	@After
 	public void resetMock(){
@@ -108,7 +105,6 @@ public class HydraClientFactoryTest {
 	@Test 
 	public void shouldAddATimerJobForRefreshHydraServersDefaultTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
-		
 		verify(timer).schedule(hydraServersMonitor, 0, TimeUnit.SECONDS.toMillis(60));
 	}
 	

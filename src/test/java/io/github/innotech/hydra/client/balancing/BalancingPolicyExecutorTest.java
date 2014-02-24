@@ -4,10 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.when;
-import io.github.innotech.hydra.client.balancing.policies.BalancingPolicyExecutor;
-import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicyExecutor;
-import io.github.innotech.hydra.client.balancing.policies.NearestPolicyExecutor;
-import io.github.innotech.hydra.client.balancing.utils.ping.PingClient;
+import io.github.innotech.hydra.client.balancing.ping.PingClient;
+import io.github.innotech.hydra.client.balancing.policies.BalancingPolicy;
+import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicy;
+import io.github.innotech.hydra.client.balancing.policies.NearestPolicy;
 
 import java.util.LinkedHashSet;
 import java.util.concurrent.Future;
@@ -22,11 +22,11 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(BalancingPolicyExecutor.class)
+@PrepareForTest(BalancingPolicy.class)
 public class BalancingPolicyExecutorTest {
 	
 	@InjectMocks
-	private BalancingPolicyExecutor policyExecutor = new NearestPolicyExecutor();
+	private BalancingPolicy policyExecutor = new NearestPolicy();
 	
 	@Mock
 	private PingClient pingClient;
@@ -62,7 +62,7 @@ public class BalancingPolicyExecutorTest {
 	
 	@Test
 	public void shouldReturnSameListWithDelegatedPolicy() throws Exception {
-		BalancingPolicyExecutor policyExecutor = new DelegatedPolicyExecutor();
+		BalancingPolicy policyExecutor = new DelegatedPolicy();
 		
 		LinkedHashSet <String> balancedServers = policyExecutor.balance(TEST_APP_SERVERS);
 		

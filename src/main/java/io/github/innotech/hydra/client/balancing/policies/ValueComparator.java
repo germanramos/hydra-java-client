@@ -1,4 +1,4 @@
-package io.github.innotech.hydra.client.balancing.utils.ping.comparator;
+package io.github.innotech.hydra.client.balancing.policies;
 
 import java.util.Comparator;
 import java.util.Map;

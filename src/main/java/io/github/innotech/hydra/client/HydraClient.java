@@ -1,7 +1,7 @@
 package io.github.innotech.hydra.client;
 
-import io.github.innotech.hydra.client.balancing.policies.BalancingPolicyExecutor;
-import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicyExecutor;
+import io.github.innotech.hydra.client.balancing.policies.BalancingPolicy;
+import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicy;
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
 import io.github.innotech.hydra.client.exceptions.NoneServersAccessible;
 
@@ -44,7 +44,7 @@ public class HydraClient {
 
 	private ExecutorService executor = Executors.newFixedThreadPool(3);
 	
-	private BalancingPolicyExecutor policy = new DelegatedPolicyExecutor();
+	private BalancingPolicy policy = new DelegatedPolicy();
 
 	/**
 	 * The constructor have default visibility because only the factory can
@@ -241,7 +241,6 @@ public class HydraClient {
 			String currentHydraServer = getCurrentHydraServer();
 			try {
 				return policy.balance(hydraServerRequester.getCandidateServers(currentHydraServer + APP_ROOT, appId));
-				
 			} catch (InaccessibleServer e) {
 				reorderServers(currentHydraServer);
 				retries++;
@@ -300,7 +299,7 @@ public class HydraClient {
 		this.waitBetweenAllServersRetry = millisecondsToRetry;
 	}
 
-	void setBalancingPolicy(BalancingPolicyExecutor policy) {
+	void setBalancingPolicy(BalancingPolicy policy) {
 		this.policy = policy;
 	}
 }
