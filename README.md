@@ -13,7 +13,7 @@ For a complete information about the project visit http://innotech.github.io/hyd
     <dependency>
        <groupId>io.github.innotech.hydra</groupId>
        <artifactId>client</artifactId>
-       <version>14</version>
+       <version>26</version>
     </dependency>
 ```
 
