@@ -176,24 +176,38 @@ public class HydraClientFactoryTest {
 	@Test 
 	public void shouldAddNumberOfRetries() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).withNumberOfRetries(30).build();
-		
+
 		verify(hydraClient).setMaxNumberOfRetries(30);
 	}
-	
+
 	@Test 
 	public void shouldAddNumberOfRetriesAnd() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).andNumberOfRetries(30).build();
-		
+
 		verify(hydraClient).setMaxNumberOfRetries(30);
 	}
-	
+
 	@Test
 	public void shouldSetTheNumberOfMillisecondAllServerCallRetry() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).waitBetweenAllServersRetry(30).build();
-		
+
 		verify(hydraClient).setWaitBetweenAllServersRetry(30);
 	}
+
+	@Test
+	public void shouldSetConnectionTimeoutWith() throws Exception{
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).withConnectionTimeout(30).build();
+
+		verify(hydraClient).setConnectionTimeout(30);
+	}
 	
+	@Test
+	public void shouldSetConnectionTimeoutAnd() throws Exception{
+		HydraClientFactory.config(TEST_HYDRA_SERVERS).andWithConnectionTimeout(30).build();
+
+		verify(hydraClient).setConnectionTimeout(30);
+	}
+
 	@Test(expected=IllegalArgumentException.class) 
 	public void shouldReturnIllegalArgumentExceptionWhenNullAppTimeOut() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).andAppsCacheRefreshTime(null);

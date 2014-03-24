@@ -31,6 +31,7 @@ import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.HTTP;
@@ -44,16 +45,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 class HydraServersRequester {
 
+	private static final Integer DEFAULT_CONNECTION_TIMEOUT_MILLISECONDS = 1000;
+
 	private HttpClient httpClient;
 
 	private ObjectMapper mapper = new ObjectMapper();
 
 	private JavaType type = mapper.getTypeFactory().constructCollectionType(LinkedHashSet.class, String.class);
 
+	private Integer connectionTimeout = DEFAULT_CONNECTION_TIMEOUT_MILLISECONDS;
+
 	public HydraServersRequester() {
 		HttpParams params = new BasicHttpParams();
 		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
 		HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
+
+		HttpConnectionParams.setConnectionTimeout(params, connectionTimeout);
+		HttpConnectionParams.setSoTimeout(params, connectionTimeout);
 
 		SchemeRegistry registry = new SchemeRegistry();
 
@@ -97,6 +105,10 @@ class HydraServersRequester {
 		} catch (IOException e) {
 			throw new InaccessibleServer(e);
 		}
+	}
+
+	void setConnectionTimeout(Integer timeout) {
+		connectionTimeout = timeout;
 	}
 
 	private LinkedHashSet<String> requestServers(String hydraServerUrl, String appId) throws IOException,

@@ -41,6 +41,8 @@ public class HydraClientFactory {
 	private boolean enableAppRefresh = true;
 	
 	private boolean enableHydraRefresh = true;
+
+	private Integer connectionTimeout = 1000;
 	
 	/**
 	 * Default constructor private according the pattern.
@@ -78,6 +80,7 @@ public class HydraClientFactory {
 		hydraClient.setWaitBetweenAllServersRetry(millisecondsToRetry);
 		hydraClient.setBalancingPolicy(policy);
 		hydraClient.reloadHydraServers();
+		hydraClient.setConnectionTimeout(connectionTimeout);
 		
 		configureCacheRefreshTimers();
 
@@ -181,5 +184,14 @@ public class HydraClientFactory {
 
 	public HydraClientFactory andWithoutAppsRefresh() {
 		return withoutAppsRefresh();
+	}
+
+	public HydraClientFactory withConnectionTimeout(Integer timeout) {
+		connectionTimeout = timeout;
+		return this;
+	}
+
+	public HydraClientFactory andWithConnectionTimeout(Integer timeout) {
+		return withConnectionTimeout(timeout);
 	}
 }

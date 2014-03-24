@@ -302,4 +302,8 @@ public class HydraClient {
 	void setBalancingPolicy(BalancingPolicy policy) {
 		this.policy = policy;
 	}
+
+	void setConnectionTimeout(Integer connectionTimeout) {
+		hydraServerRequester.setConnectionTimeout(connectionTimeout);
+	}
 }

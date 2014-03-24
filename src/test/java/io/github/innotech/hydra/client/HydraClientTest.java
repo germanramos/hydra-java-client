@@ -30,6 +30,8 @@ public class HydraClientTest {
 
 	private static final String HYDRA = "hydra";
 
+	private static final Integer CONNECTION_TIMEOUT = 1000;
+
 	private static String TEST_HYDRA_SERVER_URL = "http://localhost:8080/";
 	
 	private static String ANOTHER_TEST_HYDRA_SERVER_URL = "http://localhost:8081";
@@ -179,29 +181,40 @@ public class HydraClientTest {
 		assertEquals("The list candidate server is not the expected", TEST_HYDRA_SERVERS,candidateUrls);
 	}
 	
+	@Test
+	public void shouldSetConnectionTimeoutForRequester() throws Exception{
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
+
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.setConnectionTimeout(CONNECTION_TIMEOUT);
+
+		verify(hydraServersRequester).setConnectionTimeout(CONNECTION_TIMEOUT);
+	}
+
 	@Test(expected=NoneServersAccessible.class)
-	public void shouldCallShortcuttingTheCacheTheSecondServerFails() throws Exception{		
+	public void shouldCallShortcuttingTheCacheTheSecondServerFails() throws Exception{
 		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
 		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
-		
+
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.setMaxNumberOfRetries(1);
 		hydraClient.get(APP_ID,true);
 	}
-	
+
 	@Test
-	public void shouldReloadTheAppCache() throws Exception{		
+	public void shouldReloadTheAppCache() throws Exception{
 		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID))
 			.thenReturn(TEST_HYDRA_SERVERS)
 			.thenReturn(TEST_APP_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.get(APP_ID);
-		
+
 		hydraClient.reloadApplicationCache();
-		
+
 		LinkedHashSet<String> resultServer = hydraClient.get(APP_ID);
-		
+
 		assertEquals("The server must be the reloaded",TEST_APP_SERVERS,resultServer);
 	}
 	
