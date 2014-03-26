@@ -3,9 +3,7 @@ package io.github.innotech.hydra.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicy;
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
 import io.github.innotech.hydra.client.exceptions.NoneServersAccessible;
@@ -32,13 +30,11 @@ public class HydraClientTest {
 
 	private static final Integer CONNECTION_TIMEOUT = 1000;
 
-	private static String TEST_HYDRA_SERVER_URL = "http://localhost:8080/";
+	private static String TEST_HYDRA_SERVER_URL = "http://localhost:8080";
 	
 	private static String ANOTHER_TEST_HYDRA_SERVER_URL = "http://localhost:8081";
 	
-	private static String TEST_HYDRA_SERVER = TEST_HYDRA_SERVER_URL;
-	
-	private static String ANOTHER_TEST_HYDRA_SERVER = ANOTHER_TEST_HYDRA_SERVER_URL + "app/hydra";
+	private static String TEST_HYDRA_SERVER = TEST_HYDRA_SERVER_URL + "/app/hydra";
 	
 	private static String TEST_APP_SERVER = "http://localhost:8080/app-server";
 	
@@ -51,8 +47,8 @@ public class HydraClientTest {
 		private static final long serialVersionUID = 1L;
 
 		{
-			this.add(TEST_HYDRA_SERVER);
-			this.add(ANOTHER_TEST_HYDRA_SERVER);
+			this.add(TEST_HYDRA_SERVER_URL);
+			this.add(ANOTHER_TEST_HYDRA_SERVER_URL);
 		}
 	};
 
@@ -84,7 +80,7 @@ public class HydraClientTest {
 
 	@Test
 	public void shouldReturnTheListOfServers() throws Exception {		
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		Set<String> candidateUrls = hydraClient.get(APP_ID);
@@ -111,7 +107,7 @@ public class HydraClientTest {
 	
 	@Test
 	public void shouldRemoveAppIfAllServerFails() throws Exception{		
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.get(APP_ID);
@@ -130,9 +126,12 @@ public class HydraClientTest {
 	
 	@Test
 	public void shouldReturnTheListOfServersAsync() throws Exception {		
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient = PowerMockito.spy(hydraClient);
+		
+		when(hydraClient.isHydraAvailable()).thenReturn(true);
 		Future<LinkedHashSet<String>> async = hydraClient.getAsync(APP_ID);
 		
 		Set<String> candidateUrls = async.get();
@@ -143,21 +142,31 @@ public class HydraClientTest {
 		verify(delegatedPolicyExecutor).balance(TEST_APP_SERVERS);
 	}
 	
+	@Test(expected=NoneServersAccessible.class)
+	public synchronized void shouldThrowIfHydraIsNotAvailable() throws Exception {
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenThrow(new NoneServersAccessible());
+
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		Future<LinkedHashSet<String>> async = hydraClient.getAsync(APP_ID);
+		
+		async.get();
+	}
+	
 	@Test
 	public synchronized void shouldReloadHydraServers() throws Exception {
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT, HYDRA)).thenReturn(TEST_HYDRA_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT, HYDRA)).thenReturn(TEST_HYDRA_SERVERS);
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.reloadHydraServers();
 		
 		wait(1000);
 		
-		verify(hydraServersRequester).getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,HYDRA);
+		verify(hydraServersRequester).getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,HYDRA);
 		verify(delegatedPolicyExecutor).balance(TEST_HYDRA_SERVERS);
 	}
 	
 	@Test
 	public void shouldCallShortcuttingTheCache() throws Exception{		
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.get(APP_ID,true);
@@ -165,14 +174,14 @@ public class HydraClientTest {
 		//Call twice to ensure that the second call hit the cache. 
 		hydraClient.get(APP_ID,true);
 		
-		verify(hydraServersRequester,times(2)).getCandidateServers(TEST_HYDRA_SERVER +APP_ROOT,APP_ID);
+		verify(hydraServersRequester,times(2)).getCandidateServers(TEST_HYDRA_SERVER_URL +APP_ROOT,APP_ID);
 		verify(delegatedPolicyExecutor,times(2)).balance(TEST_APP_SERVERS);
 	}
 	
 	@Test
 	public void shouldCallShortcuttingTheCacheTheFirstServerFails() throws Exception{		
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
-		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
 		
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		Set<String> candidateUrls = hydraClient.get(APP_ID,true);
@@ -183,8 +192,8 @@ public class HydraClientTest {
 	
 	@Test
 	public void shouldSetConnectionTimeoutForRequester() throws Exception{
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
-		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenReturn(TEST_HYDRA_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.setConnectionTimeout(CONNECTION_TIMEOUT);
@@ -194,17 +203,48 @@ public class HydraClientTest {
 
 	@Test(expected=NoneServersAccessible.class)
 	public void shouldCallShortcuttingTheCacheTheSecondServerFails() throws Exception{
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
-		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenThrow(new InaccessibleServer());
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.setMaxNumberOfRetries(1);
 		hydraClient.get(APP_ID,true);
 	}
+	
+	@Test
+	public synchronized void shouldSucceedToReloadCacheAndSetHydraAvailable() throws Exception{
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT, HYDRA)).thenReturn(TEST_HYDRA_SERVERS);
 
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.setMaxNumberOfRetries(1);
+		hydraClient.setConnectionTimeout(100);
+		hydraClient.reloadHydraServers();
+		
+		wait(1000);
+		
+		assertTrue("Hydra should be marked as available", hydraClient.isHydraAvailable());
+	}
+	
+	@Test
+	//@Ignore
+	public synchronized void shouldFailToReloadCacheAndSetHydraNotAvailable() throws Exception{
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,HYDRA)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER_URL + APP_ROOT,HYDRA)).thenThrow(new InaccessibleServer());
+		
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.setMaxNumberOfRetries(1);
+		hydraClient.setConnectionTimeout(100);
+		
+		hydraClient.reloadHydraServers();
+		
+		wait(1000);
+		
+		assertTrue("Hydra should be marked as unavailable", !hydraClient.isHydraAvailable());
+	}
+	
 	@Test
 	public void shouldReloadTheAppCache() throws Exception{
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID))
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID))
 			.thenReturn(TEST_HYDRA_SERVERS)
 			.thenReturn(TEST_APP_SERVERS);
 

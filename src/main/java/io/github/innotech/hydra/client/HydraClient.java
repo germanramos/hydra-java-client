@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -46,6 +47,8 @@ public class HydraClient {
 	
 	private BalancingPolicy policy = new DelegatedPolicy();
 
+	private AtomicBoolean hydraAvailable = new AtomicBoolean(false);
+
 	/**
 	 * The constructor have default visibility because only the factory can
 	 * create hydra clients.
@@ -58,6 +61,10 @@ public class HydraClient {
 	 * Return a future with the server request. Avoid the interaction of the calling thread with the network.
 	 */
 	public Future<LinkedHashSet<String>> getAsync(final String appId) {
+		if (!isHydraAvailable()) {
+			throw new NoneServersAccessible();
+		}
+		
 		FutureTask<LinkedHashSet<String>> futureTask = new FutureTask<LinkedHashSet<String>>(
 				new Callable<LinkedHashSet<String>>() {
 
@@ -167,14 +174,19 @@ public class HydraClient {
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				LinkedHashSet<String> newHydraServers = requestCandidateServers(HYDRA_APP_ID);
-				
-				WriteLock writeLock = hydraServersReadWriteLock.writeLock();
 				try {
-					writeLock.lock();
-					hydraServers = newHydraServers;
-				} finally {
-					writeLock.unlock();
+					LinkedHashSet<String> newHydraServers = requestCandidateServers(HYDRA_APP_ID);
+
+					WriteLock writeLock = hydraServersReadWriteLock.writeLock();
+					try {
+						writeLock.lock();
+						hydraServers = newHydraServers;
+						hydraAvailable.set(true);
+					} finally {
+						writeLock.unlock();
+					}
+				} catch(NoneServersAccessible e){
+					hydraAvailable.set(false);
 				}
 			}
 		});
@@ -305,5 +317,9 @@ public class HydraClient {
 
 	void setConnectionTimeout(Integer connectionTimeout) {
 		hydraServerRequester.setConnectionTimeout(connectionTimeout);
+	}
+
+	Boolean isHydraAvailable() {
+		return hydraAvailable.get();
 	}
 }
