@@ -77,6 +77,7 @@ HydraCacheRefreshTime| 20 seconds | The time period that the cache that store th
 NumberOfRetries| 10 | The client try this number of times to connect to all the register hydra servers.
 WaitBetweenAllServersRetry| 300 milliseconds | The time between all hydra servers are tried and the next retry.
 BalancingPolicyExecutor|  Delegated | Client-side balancing policy to use. By default none is used. Available Delegated or Nearest
+ConnectionTimeout| 1000 ms | Time to abort an attempt to make a request to Hydra.
 
 To obtain the client after the configuration:
 
@@ -126,6 +127,15 @@ You can cache all the default configuration values using the following methods.
         build();
 ```
 
+###Hydra request timeout
+
+```java
+    HydraClient hydraClient = HydraClientFactory.
+            config(hydraServerUrls).
+            withConnectionTimeout(500).
+        build();
+```
+
 ###Hydra servers number of retries
 
 ```java
@@ -172,6 +182,7 @@ You can change all the parameters when configure the client.
     HydraClient hydraClient = HydraClientFactory.
             config(hydraServerUrls).
             withAppsTimeOut(10l).
+            andConnectionTimeout(500).
             andHydraTimeOut(90l).
             andNumberOfRetries(3).
             waitBetweenAllServersRetry(300).
