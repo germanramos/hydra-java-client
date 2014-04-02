@@ -2,6 +2,8 @@ package io.github.innotech.hydra.client.balancing.policies;
 
 import io.github.innotech.hydra.client.balancing.ping.PingClient;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -29,13 +31,17 @@ public class NearestPolicy implements BalancingPolicy {
 		for(String server: servers){
 			
 			try {
-				Double latency = pingClient.getLatency(server).get();
+				URI serverUri = new URI(server);
+				Double latency = pingClient.getLatency(serverUri.getHost()).get();
 				map.put(server, latency);	
 			} catch (InterruptedException e) {
 				//If someone interrupt the ping the system can be in erroneous state.
 				throw new IllegalStateException("Ping process was interrupted inpropedly",e);
 			} catch (ExecutionException e) {
 				//If there are an error in the ping execution the system continue to the next result.
+				continue;
+			} catch (URISyntaxException e) {
+				// An error on the url
 				continue;
 			}
 		}			

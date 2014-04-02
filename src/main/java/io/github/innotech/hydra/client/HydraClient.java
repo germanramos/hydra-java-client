@@ -134,6 +134,10 @@ public class HydraClient {
 		return requestCandidateRefreshingCache(appId);
 	}
 
+	public Boolean isHydraAvailable() {
+		return hydraAvailable.get();
+	}
+
 	private LinkedHashSet<String> requestCandidateRefreshingCache(String appId) {
 		LinkedHashSet<String> servers = requestCandidateServers(appId);
 		refreshCache(appId, servers);
@@ -186,6 +190,7 @@ public class HydraClient {
 						writeLock.unlock();
 					}
 				} catch(NoneServersAccessible e){
+					e.printStackTrace();
 					hydraAvailable.set(false);
 				}
 			}
@@ -317,9 +322,5 @@ public class HydraClient {
 
 	void setConnectionTimeout(Integer connectionTimeout) {
 		hydraServerRequester.setConnectionTimeout(connectionTimeout);
-	}
-
-	Boolean isHydraAvailable() {
-		return hydraAvailable.get();
 	}
 }

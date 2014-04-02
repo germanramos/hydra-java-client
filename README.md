@@ -87,6 +87,17 @@ To obtain the client after the configuration:
     //Some network call using the first of the candidate servers.
 ```
 
+To check if Hydra service is available:
+
+```java
+	HydraClient hydraClient = HydraClientFactory.hydraClient();
+    if (hydraClient.isHydraAvailable()){
+    	// Normal Hydra usage
+    } else {
+    	// Fallback mechanism
+    }
+```
+
 ###Hydra cache
 
 The Hydra client, in order to reduce the network traffic and improve the overall system performance, cache two resources:
