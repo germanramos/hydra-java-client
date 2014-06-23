@@ -190,7 +190,6 @@ public class HydraClient {
 						writeLock.unlock();
 					}
 				} catch(NoneServersAccessible e){
-					e.printStackTrace();
 					hydraAvailable.set(false);
 				}
 			}
