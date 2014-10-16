@@ -42,7 +42,7 @@ public class HydraClientTest {
 	
 	private static String APP_ID = "testAppId";
 
-	LinkedHashSet <String> TEST_HYDRA_SERVERS = new LinkedHashSet<String>() {
+	private LinkedHashSet <String> TEST_HYDRA_SERVERS = new LinkedHashSet<String>() {
 
 		private static final long serialVersionUID = 1L;
 
@@ -52,7 +52,7 @@ public class HydraClientTest {
 		}
 	};
 
-	LinkedHashSet <String> TEST_APP_SERVERS = new LinkedHashSet<String>() {
+	private LinkedHashSet <String> TEST_APP_SERVERS = new LinkedHashSet<String>() {
 
 		private static final long serialVersionUID = 1L;
 
@@ -62,7 +62,7 @@ public class HydraClientTest {
 		}
 	};
 	
-	LinkedHashSet <String> TEST_EMPTY_SERVERS = new LinkedHashSet<String>();
+	private LinkedHashSet <String> TEST_EMPTY_SERVERS = new LinkedHashSet<String>();
 	
 	@Mock
 	private HydraServersRequester hydraServersRequester;
@@ -93,9 +93,9 @@ public class HydraClientTest {
 	
 	@Test
 	public void shouldRemoveAServerThatFails() throws Exception{
-		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
 
-		HydraClient hydraClient = new HydraClient(TEST_APP_SERVERS);
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
 		hydraClient.get(APP_ID);
 		
 		//Call twice to ensure that the second call hit the cache. 
@@ -105,11 +105,12 @@ public class HydraClientTest {
 		assertTrue("The list of string with the candidate urls", !candidateAfterRemoveUrls.contains(TEST_APP_SERVER_SECOND));
 	}
 	
-	@Test
+	@Test(expected=NoneServersAccessible.class)
 	public void shouldRemoveAppIfAllServerFails() throws Exception{		
 		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,APP_ID)).thenReturn(TEST_APP_SERVERS);
 
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.setMaxNumberOfRetries(10);
 		hydraClient.get(APP_ID);
 		
 		//Call twice to ensure that the second call hit the cache. 
@@ -117,11 +118,7 @@ public class HydraClientTest {
 		hydraClient.removeServer(APP_ID,TEST_APP_SERVER_SECOND);
 		hydraClient.removeServer(APP_ID,TEST_APP_SERVER);
 		
-		Set<String> candidateAfterRemoveUrls = hydraClient.get(APP_ID);
-		
-		assertNotNull("The list of string with the candidate urls", candidateAfterRemoveUrls);
-		assertEquals("The list candidate server is not the expected", TEST_APP_SERVERS,candidateAfterRemoveUrls);
-
+		hydraClient.get(APP_ID);
 	}
 	
 	@Test
@@ -162,6 +159,24 @@ public class HydraClientTest {
 		
 		verify(hydraServersRequester).getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT,HYDRA);
 		verify(delegatedPolicyExecutor).balance(TEST_HYDRA_SERVERS);
+	}
+	
+	@Test
+	public synchronized void shouldFailToReloadCacheHydraReturnEmptyArray() throws Exception {
+		when(hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER_URL + APP_ROOT, HYDRA)).thenReturn(TEST_EMPTY_SERVERS);
+		when(hydraServersRequester.getCandidateServers(ANOTHER_TEST_HYDRA_SERVER_URL + APP_ROOT, HYDRA)).thenReturn(TEST_EMPTY_SERVERS);
+
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		
+		hydraClient.setMaxNumberOfRetries(1);
+		hydraClient.setConnectionTimeout(100);
+		
+		hydraClient.reloadHydraServers();
+		
+		wait(1000);
+		
+		assertTrue("Hydra should be marked as unavailable", !hydraClient.isHydraAvailable());
+		assertEquals("Hydraservers should be the hydraservers before the test",TEST_HYDRA_SERVERS ,hydraClient.getHydraServers());
 	}
 	
 	@Test

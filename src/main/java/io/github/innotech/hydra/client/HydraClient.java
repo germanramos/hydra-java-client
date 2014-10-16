@@ -33,6 +33,7 @@ public class HydraClient {
 
 	private LinkedHashSet<String> hydraServers;
 
+
 	private Map<String, LinkedHashSet<String>> appServersCache = new HashMap<String, LinkedHashSet<String>>();
 
 	private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
@@ -245,6 +246,8 @@ public class HydraClient {
 	// mutual exclusion
 	// region.
 	private LinkedHashSet<String> requestCandidateServers(String appId) {
+		
+		LinkedHashSet<String> newCandidateServers = new LinkedHashSet<String>();
 		Integer retries = 0;
 		Integer numberOfHydraServers = getNumberOfHydraServers();
 		Integer totalNumberOfRetries = maxNumberOfRetries * numberOfHydraServers;
@@ -256,7 +259,9 @@ public class HydraClient {
 		while (maxNumberOfRetries == 0 || retries < totalNumberOfRetries) {
 			String currentHydraServer = getCurrentHydraServer();
 			try {
-				return policy.balance(hydraServerRequester.getCandidateServers(currentHydraServer + APP_ROOT, appId));
+				newCandidateServers = hydraServerRequester.getCandidateServers(currentHydraServer + APP_ROOT, appId);
+				if(newCandidateServers == null || newCandidateServers.isEmpty()) throw new InaccessibleServer();				
+				return policy.balance(newCandidateServers);
 			} catch (InaccessibleServer e) {
 				reorderServers(currentHydraServer);
 				retries++;
@@ -313,6 +318,10 @@ public class HydraClient {
 	 */
 	void setWaitBetweenAllServersRetry(int millisecondsToRetry) {
 		this.waitBetweenAllServersRetry = millisecondsToRetry;
+	}
+
+	LinkedHashSet<String> getHydraServers() {
+		return hydraServers;
 	}
 
 	void setBalancingPolicy(BalancingPolicy policy) {

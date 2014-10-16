@@ -59,9 +59,7 @@ public class HydraClientFactory {
 			throw new IllegalArgumentException();
 		}
 		
-		for (String hydraServerUrl : hydraServerUrls) {
-			hydraClientFactory.hydraServers.add(hydraServerUrl);
-		}
+		hydraClientFactory.hydraServers.addAll(hydraServerUrls);
 		
 		return hydraClientFactory;
 	}
