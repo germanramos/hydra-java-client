@@ -1,4 +1,5 @@
 #hydra-java-client
+[![Build Status](https://travis-ci.org/innotech/hydra-java-client.svg)](https://travis-ci.org/innotech/hydra-java-client)
 
 Client of Hydra development in java. Hydra is a multi-cloud broker system.Provides a multi-cloud application discovery, management and balancing service. Hydra attempts to ease the routing and balancing burden from servers and delegate it on the client 
 
