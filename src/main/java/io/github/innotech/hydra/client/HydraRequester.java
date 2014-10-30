@@ -43,19 +43,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * Make the http request to the hydra server for obtain the candidate servers.
  * This class has default scope because is used only by hydra client.
  */
-class HydraServersRequester {
+class HydraRequester {
 
-	private static final Integer DEFAULT_CONNECTION_TIMEOUT_MILLISECONDS = 1000;
-
-	private HttpClient httpClient;
-
-	private ObjectMapper mapper = new ObjectMapper();
-
-	private JavaType type = mapper.getTypeFactory().constructCollectionType(LinkedHashSet.class, String.class);
-
-	private Integer connectionTimeout = DEFAULT_CONNECTION_TIMEOUT_MILLISECONDS;
-
-	public HydraServersRequester() {
+	public HydraRequester() {
 		HttpParams params = new BasicHttpParams();
 		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
 		HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
@@ -71,6 +61,54 @@ class HydraServersRequester {
 		ThreadSafeClientConnManager threadSafeClientConnManager = new ThreadSafeClientConnManager(params, registry);
 
 		httpClient = new DefaultHttpClient(threadSafeClientConnManager, params);
+	}
+
+
+	/**
+	 * Return the candidate url's of the servers sorted by the hydra active
+	 * algorithm.
+	 */
+	public LinkedHashSet<String> getServicesById(String hydraServerUrl, String appId) throws InaccessibleServer {
+		try {
+			return requestServers(hydraServerUrl, appId);
+		} catch (IOException e) {
+			throw new InaccessibleServer(e);
+		}
+	}
+
+	void setConnectionTimeout(Integer timeout) {
+		connectionTimeout = timeout;
+	}
+
+	private LinkedHashSet<String> requestServers(String hydraServerUrl, String appId) throws IOException,InaccessibleServer {
+		HttpGet httpGet = new HttpGet(hydraServerUrl + "/" + appId);
+		HttpResponse response = httpClient.execute(httpGet);
+		
+		try{
+			if (response.getStatusLine().getStatusCode() != 200) {
+				throw new InaccessibleServer();
+			}
+			
+			return parseJsonResponse(entityAsString(response));
+			
+		}finally{
+			response.getEntity().consumeContent();
+		}
+	}
+
+	private String entityAsString(HttpResponse response) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+
+		StringBuilder builder = new StringBuilder();
+		for (String line = null; (line = reader.readLine()) != null;) {
+			builder.append(line).append("\n");
+		}
+
+		return builder.toString();
+	}
+
+	private LinkedHashSet<String> parseJsonResponse(String response) throws IOException {
+		return mapper.readValue(response, type);
 	}
 
 	private SSLSocketFactory buildSSLSocketFactory() {
@@ -94,51 +132,6 @@ class HydraServersRequester {
 			throw new IllegalStateException(e);
 		}
 	}
-
-	/**
-	 * Return the candidate url's of the servers sorted by the hydra active
-	 * algorithm.
-	 */
-	public LinkedHashSet<String> getCandidateServers(String hydraServerUrl, String appId) throws InaccessibleServer {
-		try {
-			return requestServers(hydraServerUrl, appId);
-		} catch (IOException e) {
-			throw new InaccessibleServer(e);
-		}
-	}
-
-	void setConnectionTimeout(Integer timeout) {
-		connectionTimeout = timeout;
-	}
-
-	private LinkedHashSet<String> requestServers(String hydraServerUrl, String appId) throws IOException,
-			InaccessibleServer {
-		HttpGet httpGet = new HttpGet(hydraServerUrl + "/" + appId);
-		HttpResponse response = httpClient.execute(httpGet);
-
-		if (response.getStatusLine().getStatusCode() != 200) {
-			throw new InaccessibleServer();
-		}
-
-		return parseJsonResponse(entityAsString(response));
-	}
-
-	private String entityAsString(HttpResponse response) throws IOException {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
-
-		StringBuilder builder = new StringBuilder();
-		for (String line = null; (line = reader.readLine()) != null;) {
-			builder.append(line).append("\n");
-		}
-
-		return builder.toString();
-	}
-
-	private LinkedHashSet<String> parseJsonResponse(String response) throws IOException {
-		return mapper.readValue(response, type);
-	}
-
-	
 	/**
 	 * Inner class implements a socket factory all certifies implements the trust manager check methods void. 
 	 *
@@ -177,4 +170,15 @@ class HydraServersRequester {
 			return sslContext.getSocketFactory().createSocket();
 		}
 	}
+	
+	private static final Integer DEFAULT_CONNECTION_TIMEOUT_MILLISECONDS = 1000;
+
+	private HttpClient httpClient;
+
+	private ObjectMapper mapper = new ObjectMapper();
+
+	private JavaType type = mapper.getTypeFactory().constructCollectionType(LinkedHashSet.class, String.class);
+
+	private Integer connectionTimeout = DEFAULT_CONNECTION_TIMEOUT_MILLISECONDS;
+
 }

@@ -43,10 +43,10 @@ public class HydraClientFactoryTest {
 	private Timer appTimer;
 	
 	@Mock
-	private HydraAppCacheMonitor hydraClientCacheMonitor;
+	private ServicesCacheMonitor hydraClientCacheMonitor;
 	
 	@Mock
-	private HydraServersMonitor hydraServersMonitor;
+	private HydraServiceCacheMonitor hydraServersMonitor;
 	
 	@Mock
 	private DelegatedPolicy policyExecutor;
@@ -99,7 +99,7 @@ public class HydraClientFactoryTest {
 	public void shouldCallToRefreshHydraServerMethods() throws Exception{
 		HydraClientFactory.config(TEST_HYDRA_SERVERS).build();
 
-		verify(hydraClient).reloadHydraServers();
+		verify(hydraClient).initHydraService();
 	}
 	
 	@Test 
@@ -230,8 +230,8 @@ public class HydraClientFactoryTest {
 	
 	private void hydraClientFactoryTimersFixture() throws Exception {
 		PowerMockito.whenNew(Timer.class).withAnyArguments().thenReturn(timer,appTimer);
-		PowerMockito.whenNew(HydraAppCacheMonitor.class).withAnyArguments().thenReturn(hydraClientCacheMonitor);
-		PowerMockito.whenNew(HydraServersMonitor.class).withAnyArguments().thenReturn(hydraServersMonitor);
+		PowerMockito.whenNew(ServicesCacheMonitor.class).withAnyArguments().thenReturn(hydraClientCacheMonitor);
+		PowerMockito.whenNew(HydraServiceCacheMonitor.class).withAnyArguments().thenReturn(hydraServersMonitor);
 		PowerMockito.whenNew(HydraClient.class).withAnyArguments().thenReturn(hydraClient);
 	}
 }

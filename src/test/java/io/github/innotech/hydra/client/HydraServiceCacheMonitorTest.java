@@ -7,17 +7,17 @@ import org.mockito.runners.MockitoJUnitRunner;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class HydraAppCacheMonitorTest {
+public class HydraServiceCacheMonitorTest {
 
 	@Mock
 	private HydraClient hydraClient;
 	
 	@Test
 	public void shouldRefreshTheMongoCache(){
-		HydraAppCacheMonitor hydraClientCacheMonitor = new HydraAppCacheMonitor(hydraClient);
+		HydraServiceCacheMonitor hydraServersMonitor = new HydraServiceCacheMonitor(hydraClient);
 		
-		hydraClientCacheMonitor.run();
+		hydraServersMonitor.run();
 		
-		verify(hydraClient).reloadApplicationCache();
+		verify(hydraClient).initHydraService();
 	} 
 }

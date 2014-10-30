@@ -3,7 +3,7 @@ package io.github.innotech.hydra.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
-import io.github.innotech.hydra.client.HydraServersRequester.DummySSLSocketFactory;
+import io.github.innotech.hydra.client.HydraRequester.DummySSLSocketFactory;
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
 
 import java.io.ByteArrayInputStream;
@@ -27,8 +27,52 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({HydraServersRequester.class,DefaultHttpClient.class,KeyStore.class})
-public class HydraServersRequesterTest {
+@PrepareForTest({HydraRequester.class,DefaultHttpClient.class,KeyStore.class})
+public class HydraRequesterTest {
+
+	@Before
+	public void configureHttpClient() throws Exception, KeyStoreException {
+		PowerMockito.whenNew(DefaultHttpClient.class).withAnyArguments().thenReturn(defaultHttpClient);
+		PowerMockito.whenNew(HttpGet.class).withArguments(TEST_HYDRA_SERVER + "/" + APP_ID).thenReturn(httpGet);
+		PowerMockito.mockStatic(KeyStore.class);
+		when(KeyStore.getInstance(KeyStore.getDefaultType())).thenReturn(keyStore);
+		PowerMockito.whenNew(DummySSLSocketFactory.class).withAnyArguments().thenReturn(dummySSLSocketFactory);
+	}
+	
+	@Test
+	public void shouldReturnAListOfServers() throws Exception {
+		when(defaultHttpClient.execute(httpGet)).thenReturn(httpResponse);
+		when(httpResponse.getStatusLine()).thenReturn(statusLine);
+		when(statusLine.getStatusCode()).thenReturn(200);
+
+		when(httpResponse.getEntity()).thenReturn(httpEntity);
+		when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream(TEST_HYDRA_SERVERS.getBytes()));
+		
+		HydraRequester hydraServersRequester = new HydraRequester();
+		Set<String> candidateServers = hydraServersRequester.getServicesById(TEST_HYDRA_SERVER, APP_ID);
+		
+		assertNotNull("The candidate servers must be not null",candidateServers);
+		assertEquals("The number of elements must be the expected",3,candidateServers.size());
+	}
+	
+	@Test(expected=InaccessibleServer.class)
+	public void shouldFailWhenReturnTheServerList() throws Exception {
+		when(defaultHttpClient.execute(httpGet)).thenReturn(httpResponse);
+		when(httpResponse.getStatusLine()).thenReturn(statusLine);
+		when(statusLine.getStatusCode()).thenReturn(400);
+		when(httpResponse.getEntity()).thenReturn(httpEntity);
+		
+		HydraRequester hydraServersRequester = new HydraRequester();
+		hydraServersRequester.getServicesById(TEST_HYDRA_SERVER, APP_ID);
+	}
+	
+	@Test(expected=InaccessibleServer.class)
+	public void shouldFailWhenExecuteTheRequest() throws Exception {
+		when(defaultHttpClient.execute(httpGet)).thenThrow(new IOException());
+
+		HydraRequester hydraServersRequester = new HydraRequester();
+		hydraServersRequester.getServicesById(TEST_HYDRA_SERVER, APP_ID);
+	}
 
 	@Mock
 	private HttpClient httpClient;
@@ -60,47 +104,4 @@ public class HydraServersRequesterTest {
 	
 	private static String APP_ID = "testAppId";
 
-	@Before
-	public void configureHttpClient() throws Exception, KeyStoreException {
-		PowerMockito.whenNew(DefaultHttpClient.class).withAnyArguments().thenReturn(defaultHttpClient);
-		PowerMockito.whenNew(HttpGet.class).withArguments(TEST_HYDRA_SERVER + "/" + APP_ID).thenReturn(httpGet);
-		PowerMockito.mockStatic(KeyStore.class);
-		when(KeyStore.getInstance(KeyStore.getDefaultType())).thenReturn(keyStore);
-		PowerMockito.whenNew(DummySSLSocketFactory.class).withAnyArguments().thenReturn(dummySSLSocketFactory);
-	}
-	
-	@Test
-	public void shouldReturnAListOfServers() throws Exception {
-		when(defaultHttpClient.execute(httpGet)).thenReturn(httpResponse);
-		when(httpResponse.getStatusLine()).thenReturn(statusLine);
-		when(statusLine.getStatusCode()).thenReturn(200);
-
-		when(httpResponse.getEntity()).thenReturn(httpEntity);
-		when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream(TEST_HYDRA_SERVERS.getBytes()));
-		
-		HydraServersRequester hydraServersRequester = new HydraServersRequester();
-		Set<String> candidateServers = hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER, APP_ID);
-		
-		assertNotNull("The candidate servers must be not null",candidateServers);
-		assertEquals("The number of elements must be the expected",3,candidateServers.size());
-	}
-	
-	@Test(expected=InaccessibleServer.class)
-	public void shouldFailWhenReturnTheServerList() throws Exception {
-		when(defaultHttpClient.execute(httpGet)).thenReturn(httpResponse);
-		when(httpResponse.getStatusLine()).thenReturn(statusLine);
-		when(statusLine.getStatusCode()).thenReturn(400);
-
-		HydraServersRequester hydraServersRequester = new HydraServersRequester();
-		hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER, APP_ID);
-	}
-	
-	@Test(expected=InaccessibleServer.class)
-	public void shouldFailWhenExecuteTheRequest() throws Exception {
-		when(defaultHttpClient.execute(httpGet)).thenThrow(new IOException());
-
-		HydraServersRequester hydraServersRequester = new HydraServersRequester();
-		hydraServersRequester.getCandidateServers(TEST_HYDRA_SERVER, APP_ID);
-	}
-	
 }
