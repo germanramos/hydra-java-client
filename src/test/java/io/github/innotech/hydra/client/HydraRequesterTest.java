@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import io.github.innotech.hydra.client.HydraRequester.DummySSLSocketFactory;
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
+import io.github.innotech.hydra.client.exceptions.IncorrectServerResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -55,7 +56,7 @@ public class HydraRequesterTest {
 		assertEquals("The number of elements must be the expected",3,candidateServers.size());
 	}
 	
-	@Test(expected=InaccessibleServer.class)
+	@Test(expected=IncorrectServerResponse.class)
 	public void shouldFailWhenReturnTheServerList() throws Exception {
 		when(defaultHttpClient.execute(httpGet)).thenReturn(httpResponse);
 		when(httpResponse.getStatusLine()).thenReturn(statusLine);

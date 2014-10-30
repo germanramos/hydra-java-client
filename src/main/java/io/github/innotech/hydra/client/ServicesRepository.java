@@ -2,7 +2,9 @@ package io.github.innotech.hydra.client;
 
 import io.github.innotech.hydra.client.balancing.policies.BalancingPolicy;
 import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicy;
+import io.github.innotech.hydra.client.exceptions.HydraNotAvailable;
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
+import io.github.innotech.hydra.client.exceptions.IncorrectServerResponse;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -12,11 +14,11 @@ import java.util.concurrent.TimeUnit;
 
 class ServicesRepository {
 
-	LinkedHashSet<String> findById(String serviceId,LinkedHashSet<String> hydraServers) {
+	LinkedHashSet<String> findById(String serviceId,LinkedHashSet<String> hydraServers) throws HydraNotAvailable {
 		LinkedHashSet<String> newCandidateServers = new LinkedHashSet<String>();
 
 		Integer retries = 0;
-		
+		Integer failedServers = 0;
 		// Infinite loop if maxNumberOfRetries is set to 0.
 		// In this case retries can overflow it value, java automatically set to
 		// the integer minimum value an the loop goes on
@@ -26,6 +28,8 @@ class ServicesRepository {
 					newCandidateServers = hydraServerRequester.getServicesById(hydraServer + APP_ROOT, serviceId);
 					return policy.balance(newCandidateServers);
 				} catch (InaccessibleServer e) {
+					failedServers++;
+				} catch (IncorrectServerResponse e){
 					continue;
 				}
 			}
@@ -34,10 +38,13 @@ class ServicesRepository {
 			waitUntilTheNextRetry();
 		}
 
+		if (hydraServers.size()*maxNumberOfRetries == failedServers){
+			throw new HydraNotAvailable();
+		}
 		return newCandidateServers;
 	}
 
-	Map<String, LinkedHashSet<String>> findByIds(Set<String> applications,LinkedHashSet<String> hydraServers) {
+	Map<String, LinkedHashSet<String>> findByIds(Set<String> applications,LinkedHashSet<String> hydraServers) throws HydraNotAvailable {
 		Map<String, LinkedHashSet<String>> newAppServerCache = new HashMap<String, LinkedHashSet<String>>();
 		
 		for (String applicationId : applications) {

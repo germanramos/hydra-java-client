@@ -5,7 +5,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import io.github.innotech.hydra.client.exceptions.HydraNotAvailable;
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
+import io.github.innotech.hydra.client.exceptions.IncorrectServerResponse;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,7 +25,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 public class ServicesRepositoryTest {
-
 	
 	@Before
 	public void setup() throws Exception {
@@ -32,7 +33,7 @@ public class ServicesRepositoryTest {
 	
 	@Test
 	@PrepareForTest(ServicesRepository.class)
-	public void shouldReturnTheServicesFirstServiceResponseById() throws InaccessibleServer{
+	public void shouldReturnTheServicesFirstServiceResponseById() throws InaccessibleServer, IncorrectServerResponse, HydraNotAvailable{
 		ServicesRepository servicesRepository = new ServicesRepository();
 		
 		when(hydraServersRequester.getServicesById(TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenReturn(TEST_SERVICES);
@@ -44,10 +45,10 @@ public class ServicesRepositoryTest {
 	
 	@Test
 	@PrepareForTest(ServicesRepository.class)
-	public void shouldReturnTheServicesSecondServiceResponseById() throws InaccessibleServer{
+	public void shouldReturnTheServicesSecondServiceResponseById() throws InaccessibleServer, IncorrectServerResponse, HydraNotAvailable{
 		ServicesRepository servicesRepository = new ServicesRepository();
 		
-		when(hydraServersRequester.getServicesById(TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getServicesById(TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenThrow(new IncorrectServerResponse());
 		when(hydraServersRequester.getServicesById(ANOTHER_TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenReturn(TEST_SERVICES);
 		
 		LinkedHashSet<String> services = servicesRepository.findById(SERVICE_ID, TEST_HYDRA_SERVERS);
@@ -58,12 +59,12 @@ public class ServicesRepositoryTest {
 	
 	@Test
 	@PrepareForTest(ServicesRepository.class)
-	public void shouldReturnEmptyListIfNoneServicesResponse() throws InaccessibleServer{
+	public void shouldReturnEmptyListIfNoneServicesResponse() throws InaccessibleServer, IncorrectServerResponse, HydraNotAvailable{
 		ServicesRepository servicesRepository = new ServicesRepository();
 		servicesRepository.setMaxNumberOfRetries(1);
 		
-		when(hydraServersRequester.getServicesById(TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenThrow(new InaccessibleServer());
-		when(hydraServersRequester.getServicesById(ANOTHER_TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenThrow(new InaccessibleServer());
+		when(hydraServersRequester.getServicesById(TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenThrow(new IncorrectServerResponse());
+		when(hydraServersRequester.getServicesById(ANOTHER_TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenThrow(new IncorrectServerResponse());
 		
 		LinkedHashSet<String> services = servicesRepository.findById(SERVICE_ID, TEST_HYDRA_SERVERS);
 		
@@ -71,14 +72,26 @@ public class ServicesRepositoryTest {
 		assertEquals("The returned services must be the expected",new LinkedHashSet<String>(),services);
 	}
 	
-	@Test
+	@Test (expected = HydraNotAvailable.class)
 	@PrepareForTest(ServicesRepository.class)
-	public void shouldRetryNoneServicesResponse() throws InaccessibleServer{
+	public void shouldReturnHydraNoAvailableExpection() throws InaccessibleServer, IncorrectServerResponse, HydraNotAvailable{
 		ServicesRepository servicesRepository = new ServicesRepository();
-		servicesRepository.setMaxNumberOfRetries(2);
+		servicesRepository.setMaxNumberOfRetries(1);
 		
 		when(hydraServersRequester.getServicesById(TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenThrow(new InaccessibleServer());
 		when(hydraServersRequester.getServicesById(ANOTHER_TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenThrow(new InaccessibleServer());
+		
+		servicesRepository.findById(SERVICE_ID, TEST_HYDRA_SERVERS);
+	}
+	
+	@Test
+	@PrepareForTest(ServicesRepository.class)
+	public void shouldRetryNoneServicesResponse() throws InaccessibleServer, IncorrectServerResponse, HydraNotAvailable{
+		ServicesRepository servicesRepository = new ServicesRepository();
+		servicesRepository.setMaxNumberOfRetries(2);
+		
+		when(hydraServersRequester.getServicesById(TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenThrow(new IncorrectServerResponse());
+		when(hydraServersRequester.getServicesById(ANOTHER_TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenThrow(new IncorrectServerResponse());
 		
 		servicesRepository.findById(SERVICE_ID, TEST_HYDRA_SERVERS);
 		
@@ -88,7 +101,7 @@ public class ServicesRepositoryTest {
 	
 	@Test
 	@PrepareForTest(ServicesRepository.class)
-	public void shouldReturnAListOfServicesForAnId() throws InaccessibleServer{
+	public void shouldReturnAListOfServicesForAnId() throws InaccessibleServer, IncorrectServerResponse, HydraNotAvailable{
 		ServicesRepository servicesRepository = new ServicesRepository();
 		
 		when(hydraServersRequester.getServicesById(TEST_HYDRA_SERVER_URL + APP_ROOT , SERVICE_ID)).thenReturn(TEST_SERVICES);
@@ -120,7 +133,7 @@ public class ServicesRepositoryTest {
 	private LinkedHashSet<String> TEST_HYDRA_SERVERS = new LinkedHashSet<String>() {
 
 		private static final long serialVersionUID = 1L;
-
+	
 		{
 			this.add(TEST_HYDRA_SERVER_URL);
 			this.add(ANOTHER_TEST_HYDRA_SERVER_URL);

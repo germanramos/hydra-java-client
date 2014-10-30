@@ -1,13 +1,15 @@
 package io.github.innotech.hydra.client;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import io.github.innotech.hydra.client.balancing.policies.DelegatedPolicy;
-import io.github.innotech.hydra.client.exceptions.NoneServersAccessible;
+import io.github.innotech.hydra.client.exceptions.HydraNotAvailable;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -115,15 +117,6 @@ public class HydraClientTest {
 		assertEquals("The list candidate server is not the expected", TEST_SERVICES, candidateUrls);
 	}
 
-	@Test(expected = NoneServersAccessible.class)
-	public void shouldThrowIfHydraIsNotAvailable() throws Exception {
-		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
-		hydraClient.setHydraAvailable(false);
-		Future<LinkedHashSet<String>> async = hydraClient.getAsync(SERVICE_ID);
-
-		async.get();
-	}
-
 	@Test
 	public void shouldReloadHydraServers() throws Exception {
 		when(servicesRepository.findById(HYDRA, TEST_HYDRA_SERVERS)).thenReturn(TEST_HYDRA_SERVERS);
@@ -134,6 +127,30 @@ public class HydraClientTest {
 		hydraClient.reloadHydraServiceCache();
 
 		verify(hydraServiceCache).refresh(TEST_HYDRA_SERVERS);
+	}
+	
+	@Test
+	public void shouldReloadHydraServersMarkHydraUnavailableWhenException() throws Exception {
+		when(servicesRepository.findById(HYDRA, TEST_HYDRA_SERVERS)).thenThrow(new HydraNotAvailable());
+		when(hydraServiceCache.getHydraServers()).thenReturn(TEST_HYDRA_SERVERS);
+
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+
+		hydraClient.reloadHydraServiceCache();
+
+		verify(hydraServiceCache,never()).refresh(TEST_HYDRA_SERVERS);
+		assertFalse("Hydra is not available",hydraClient.isHydraAvailable());
+	}
+	
+	@Test
+	public void shouldMarkHydraAsNoAvailableWhenNoHydraServers() throws Exception {
+		when(servicesRepository.findById(HYDRA, TEST_HYDRA_SERVERS)).thenReturn(new LinkedHashSet<String>());
+
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+
+		hydraClient.reloadHydraServiceCache();
+
+		assertFalse("Hydra is not available",hydraClient.isHydraAvailable());
 	}
 	
 	@Test
@@ -169,11 +186,54 @@ public class HydraClientTest {
 		when(hydraServiceCache.getHydraServers()).thenReturn(TEST_HYDRA_SERVERS);
 		
 		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.setHydraAvailable(true);
 		hydraClient.reloadServicesCache();
-
+		
 		verify(servicesCache).refresh(services);
 	}
 
+	@Test
+	public void shouldNotReloadTheServiceCacheIfHydraDontAvailable() throws Exception {
+		LinkedHashSet<String> appIds = new LinkedHashSet<String>();
+		appIds.add(SERVICE_ID);
+		
+		Map<String,LinkedHashSet<String>> services = new HashMap<String, LinkedHashSet<String>>();
+		services.put(SERVICE_ID, TEST_SERVICES);
+		
+		when(servicesRepository.findByIds(appIds, TEST_HYDRA_SERVERS)).thenReturn(services);
+		when(servicesCache.getIds()).thenReturn(appIds);
+		when(hydraServiceCache.getHydraServers()).thenReturn(TEST_HYDRA_SERVERS);
+		
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+		hydraClient.setHydraAvailable(false);
+		
+		hydraClient.reloadServicesCache();
+
+		verify(servicesCache,never()).refresh(services);
+		verify(servicesRepository,never()).findByIds(appIds, TEST_HYDRA_SERVERS);
+	}
+
+	@Test
+	public void shouldMaskHydraDontAvailable() throws Exception {
+		LinkedHashSet<String> appIds = new LinkedHashSet<String>();
+		appIds.add(SERVICE_ID);
+		
+		Map<String,LinkedHashSet<String>> services = new HashMap<String, LinkedHashSet<String>>();
+		services.put(SERVICE_ID, TEST_SERVICES);
+		
+		when(servicesRepository.findByIds(appIds, TEST_HYDRA_SERVERS)).thenThrow(new HydraNotAvailable());
+		when(servicesCache.getIds()).thenReturn(appIds);
+		when(hydraServiceCache.getHydraServers()).thenReturn(TEST_HYDRA_SERVERS);
+		
+		HydraClient hydraClient = new HydraClient(TEST_HYDRA_SERVERS);
+
+		hydraClient.reloadServicesCache();
+
+		assertFalse("Hydra is not available",hydraClient.isHydraAvailable());
+		verify(servicesCache,never()).refresh(services);
+		verify(servicesRepository,never()).findByIds(appIds, TEST_HYDRA_SERVERS);
+	}
+	
 	private static final String HYDRA = "hydra";
 
 	private static final Integer CONNECTION_TIMEOUT = 1000;

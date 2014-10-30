@@ -1,7 +1,7 @@
 package io.github.innotech.hydra.client;
 
 import io.github.innotech.hydra.client.balancing.policies.BalancingPolicy;
-import io.github.innotech.hydra.client.exceptions.NoneServersAccessible;
+import io.github.innotech.hydra.client.exceptions.HydraNotAvailable;
 
 import java.util.LinkedHashSet;
 import java.util.concurrent.Callable;
@@ -43,9 +43,14 @@ public class HydraClient {
 			return servicesCache.findById(serviceId);
 		}  
 		
-		LinkedHashSet<String> servers = servicesRepository.findById(serviceId,hydraServiceCache.getHydraServers());
-		servicesCache.putService(serviceId, servers);
-		
+		LinkedHashSet<String> servers = new LinkedHashSet<String>();
+		try {
+			servers = servicesRepository.findById(serviceId,hydraServiceCache.getHydraServers());
+			servicesCache.putService(serviceId, servers);
+		} catch (HydraNotAvailable e) {
+			hydraAvailable.set(false);
+		}
+
 		return servers;
 	}
 		
@@ -53,10 +58,6 @@ public class HydraClient {
 	 * Return a future with the server request. Avoid the interaction of the calling thread with the network.
 	 */
 	public Future<LinkedHashSet<String>> getAsync(final String serviceId) {
-		if (!isHydraAvailable()) {
-			throw new NoneServersAccessible();
-		}
-		
 		FutureTask<LinkedHashSet<String>> futureTask = new FutureTask<LinkedHashSet<String>>(
 			new Callable<LinkedHashSet<String>>() {
 				
@@ -89,8 +90,15 @@ public class HydraClient {
 	}
 	
 	void reloadHydraServiceCache() {
-		hydraServiceCache.refresh(servicesRepository.findById(HYDRA_APP_ID,
-				hydraServiceCache.getHydraServers()));
+		try {
+			LinkedHashSet<String> newHydraServers = servicesRepository.findById(HYDRA_APP_ID,
+					hydraServiceCache.getHydraServers());
+			
+			hydraServiceCache.refresh(newHydraServers);
+			hydraAvailable.set(!newHydraServers.isEmpty());
+		} catch (HydraNotAvailable e) {
+			hydraAvailable.set(false);
+		}
 	}
 
 	/**
@@ -101,8 +109,16 @@ public class HydraClient {
 	 * write mode is allowed to actualize the cache.
 	 */
 	void reloadServicesCache() {
-		servicesCache.refresh(servicesRepository.findByIds(servicesCache.getIds(),
-				hydraServiceCache.getHydraServers()));
+		if (!hydraAvailable.get()){
+			return;
+		}
+		
+		try {
+			servicesCache.refresh(servicesRepository.findByIds(servicesCache.getIds(),
+					hydraServiceCache.getHydraServers()));
+		} catch (HydraNotAvailable e) {
+			hydraAvailable.set(false);
+		}
 	}
 	
 	/**

@@ -1,6 +1,7 @@
 package io.github.innotech.hydra.client;
 
 import io.github.innotech.hydra.client.exceptions.InaccessibleServer;
+import io.github.innotech.hydra.client.exceptions.IncorrectServerResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -63,12 +64,11 @@ class HydraRequester {
 		httpClient = new DefaultHttpClient(threadSafeClientConnManager, params);
 	}
 
-
 	/**
 	 * Return the candidate url's of the servers sorted by the hydra active
 	 * algorithm.
 	 */
-	public LinkedHashSet<String> getServicesById(String hydraServerUrl, String appId) throws InaccessibleServer {
+	public LinkedHashSet<String> getServicesById(String hydraServerUrl, String appId) throws InaccessibleServer,IncorrectServerResponse {
 		try {
 			return requestServers(hydraServerUrl, appId);
 		} catch (IOException e) {
@@ -80,13 +80,13 @@ class HydraRequester {
 		connectionTimeout = timeout;
 	}
 
-	private LinkedHashSet<String> requestServers(String hydraServerUrl, String appId) throws IOException,InaccessibleServer {
+	private LinkedHashSet<String> requestServers(String hydraServerUrl, String appId) throws IOException,IncorrectServerResponse {
 		HttpGet httpGet = new HttpGet(hydraServerUrl + "/" + appId);
 		HttpResponse response = httpClient.execute(httpGet);
 		
 		try{
 			if (response.getStatusLine().getStatusCode() != 200) {
-				throw new InaccessibleServer();
+				throw new IncorrectServerResponse();
 			}
 			
 			return parseJsonResponse(entityAsString(response));
