@@ -44,10 +44,10 @@ class ServicesRepository {
 		return newCandidateServers;
 	}
 
-	Map<String, LinkedHashSet<String>> findByIds(Set<String> applications,LinkedHashSet<String> hydraServers) throws HydraNotAvailable {
+	Map<String, LinkedHashSet<String>> findByIds(Set<String> serviceIds,LinkedHashSet<String> hydraServers) throws HydraNotAvailable {
 		Map<String, LinkedHashSet<String>> newAppServerCache = new HashMap<String, LinkedHashSet<String>>();
 		
-		for (String applicationId : applications) {
+		for (String applicationId : serviceIds) {
 			LinkedHashSet<String> newAppServers = findById(applicationId,hydraServers);
 			newAppServerCache.put(applicationId, newAppServers);
 		}
